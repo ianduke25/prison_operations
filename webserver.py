@@ -3,7 +3,7 @@ import re
 import os
 st.title('US Prison Population and Visitation')
 st.write('Nick Miller | Ian Duke | Tianyunxi (Emily) Yin | Caleb Hamblen | Lance Santerre')
-file_path = '/Users/lancesanterre/prison_proj/clean_data/total_df.csv'
+file_path = '/clean_data/total_df.csv'
 
 with open(file_path, "rb") as file:
     btn = st.download_button(
@@ -12,7 +12,7 @@ with open(file_path, "rb") as file:
             file_name="total_df.csv",
             mime="text/csv"
         )
-file_path_small = '/Users/lancesanterre/prison_proj/clean_data/'
+file_path_small = '/clean_data/'
 user_input = st.text_input("Enter Name of Facility").upper()
 sanitized_view_name = re.sub(r'\W+', '_', user_input)
 complete_file_path = os.path.join(file_path_small, sanitized_view_name + "_df.csv")
