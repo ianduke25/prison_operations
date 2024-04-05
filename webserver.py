@@ -101,8 +101,8 @@ if facility_name:
 
         # Convert the 'datetime_of_data' column to datetime type for proper sorting
         if 'datetime_of_data' in data_df.columns and 'visiting_status' in data_df.columns:
+            data_df['datetime_of_data'] = data_df['datetime_of_data'].str[:-4]
             data_df['datetime_of_data'] = pd.to_datetime(data_df['datetime_of_data'])
-            data_df.sort_values(by='datetime_of_data', inplace=True)
 
             # Plot with Plotly - creating a line chart for population
             fig = go.Figure()
