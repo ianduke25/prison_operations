@@ -95,5 +95,7 @@ if facility_name:
                           transition_duration=500)
         st.plotly_chart(fig, use_container_width=True)
     except FileNotFoundError:
-        st.error(f"Data
+        st.error(f"Data file for {facility_name} not found.")
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
 
