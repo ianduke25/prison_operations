@@ -8,14 +8,11 @@ import plotly.graph_objs as go
 
 st.title('US Prison Population and Visitation')
 st.write('Nick Miller | Ian Duke | Tianyunxi (Emily) Yin | Caleb Hamblen | Lance Santerre')
-file_path = f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/total_df.csv'
-# Simulate a simple user database
 file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/total_df.csv'
 
 
-    
 users = {
-    "usfca": "dons",
+    "lance": "lance",
     "user2": "password2",
 }
 
@@ -43,25 +40,18 @@ if not st.session_state['authenticated']:
 if st.session_state['authenticated']:
     st.title("Secure Data Page")
     st.write("Welcome! You can now download the data.")
-    try:
-    # Fetch the content of the CSV file in bytes
-        response = requests.get(file_path)
-        response.raise_for_status()  # This will raise an exception for HTTP errors
     
-    # Use the response content in the download button
+
+    with open(file_path, "rb") as file:
         btn = st.download_button(
-            label="Download Full DataSet",
-            data=response.content,  # This is the key change: using 'response.content' which is in bytes
-            file_name="total_df.csv",
-            mime="text/csv"
-        )
-
-    except requests.exceptions.RequestException as e:  # This catches HTTP errors and other Request exceptions
-        st.error(f"An error occurred: {e}")
-
+                label="Download Full DataSet",
+                data=file,
+                file_name="total_df.csv",
+                mime="text/csv"
+            )
     
 
-    file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
+    file_path_small = 'f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
     user_input = st.text_input("Enter Name of Facility").upper()
     sanitized_view_name = re.sub(r'\W+', '_', user_input)
     complete_file_path = os.path.join(file_path_small, sanitized_view_name + "_df.csv")
@@ -79,6 +69,7 @@ if st.session_state['authenticated']:
     else:
         if user_input:  # If user_input is not empty
             st.warning("The specified facility name does not exist. Please try again.")
+
 
 # Visualization accessible to all users
 options = ['FMC_FORT_WORTH','FCI_BECKLEY','USP_YAZOO_CITY','FCI_BIG_SPRING','FCI_HAZELTON','FMC_DEVENS','FCI_SANDSTONE','FCI_PEKIN','FCI_YAZOO_CITY_LOW',
