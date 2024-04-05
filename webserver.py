@@ -59,28 +59,25 @@ if st.session_state['authenticated']:
     file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
     user_input = st.text_input("Enter Name of Facility").upper()
     sanitized_view_name = re.sub(r'\W+', '_', user_input)
-    complete_file_path = os.path.join(file_path_small, sanitized_view_name + "_df.csv")
+    complete_file_path = f"{file_path_small}{sanitized_view_name}_df.csv"
     st.write(complete_file_path)
-    if os.path.exists(complete_file_path):
-        try:
-            response = requests.get(complete_file_path)
-            if response.ok:
-                csv_content = response.content
-                btn = st.download_button(
-                    label=f"Download {user_input} DataSet",
-                    data=csv_content,
-                    file_name=f"{sanitized_view_name}.csv",
-                    mime="text/csv"
-                )
-            else:
-                st.error("Failed to download the dataset.")
-
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+    
+    # Try to fetch the file to see if it exists
+    response = requests.get(complete_file_path)
+    if response.ok:
+        # If the request was successful, enable downloading
+        csv_content = response.content
+        btn = st.download_button(
+            label=f"Download {user_input} DataSet",
+            data=csv_content,
+            file_name=f"{sanitized_view_name}.csv",
+            mime="text/csv"
+        )
     else:
-        if user_input:  # If user_input is not empty
-            st.warning("The specified facility name does not exist. Please try again.")
-
+        # If the request failed, show an appropriate message
+        if user_input:  # Only show the warning if the user has actually input something
+            st.warning("The specified facility name does not exist or there was an error fetching the dataset. Please try again.")
+    
 
 # Visualization accessible to all users
 options = ['FMC_FORT_WORTH','FCI_BECKLEY','USP_YAZOO_CITY','FCI_BIG_SPRING','FCI_HAZELTON','FMC_DEVENS','FCI_SANDSTONE','FCI_PEKIN','FCI_YAZOO_CITY_LOW',
