@@ -12,15 +12,7 @@ file_path = f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_dat
 # Simulate a simple user database
 file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/total_df.csv'
 
-try:
-    # Directly read the CSV file from the URL into a pandas DataFrame
-    data_df = pd.read_csv(file_path)
-    
-    # Proceed with your data processing and visualization logic
-    st.write(data_df.head())  # Example: Display the first few rows of the DataFrame
 
-except Exception as e:
-    st.error(f"An error occurred: {e}")
     
 users = {
     "usfca": "dons",
@@ -51,10 +43,9 @@ if not st.session_state['authenticated']:
 if st.session_state['authenticated']:
     st.title("Secure Data Page")
     st.write("Welcome! You can now download the data.")
-    
+    data_df = pd.read_csv(file_path)
 
-    with open(file_path, "rb") as file:
-        btn = st.download_button(
+    btn = st.download_button(
                 label="Download Full DataSet",
                 data=file,
                 file_name="total_df.csv",
