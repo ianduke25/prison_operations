@@ -8,7 +8,7 @@ import plotly.graph_objs as go
 
 st.title('US Prison Population and Visitation')
 st.write('Nick Miller | Ian Duke | Tianyunxi (Emily) Yin | Caleb Hamblen | Lance Santerre')
-file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/total_df.csv'
+file_path = f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/total_df.csv'
 # Simulate a simple user database
 users = {
     "usfca": "dons",
@@ -50,7 +50,7 @@ if st.session_state['authenticated']:
             )
     
 
-    file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data//'
+    file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
     user_input = st.text_input("Enter Name of Facility").upper()
     sanitized_view_name = re.sub(r'\W+', '_', user_input)
     complete_file_path = os.path.join(file_path_small, sanitized_view_name + "_df.csv")
