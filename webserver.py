@@ -60,6 +60,7 @@ if st.session_state['authenticated']:
     user_input = st.text_input("Enter Name of Facility").upper()
     sanitized_view_name = re.sub(r'\W+', '_', user_input)
     complete_file_path = os.path.join(file_path_small, sanitized_view_name + "_df.csv")
+    st.write(complete_file_path)
     if os.path.exists(complete_file_path):
         try:
             response = requests.get(complete_file_path)
