@@ -51,7 +51,7 @@ if st.session_state['authenticated']:
             )
     
 
-    file_path_small = 'f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
+    file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
     user_input = st.text_input("Enter Name of Facility").upper()
     sanitized_view_name = re.sub(r'\W+', '_', user_input)
     complete_file_path = os.path.join(file_path_small, sanitized_view_name + "_df.csv")
