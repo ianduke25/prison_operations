@@ -93,8 +93,8 @@ facility_name = st.selectbox("Choose a Facility", options, index=0, placeholder=
 if facility_name:
     # Normalize facility name to match file naming convention
     sanitized_facility_name = re.sub(r'\W+', '_', facility_name).upper()
-    #complete_file_path = os.path.join('/Users/lancesanterre/prison_proj/prison/clean_data/', sanitized_facility_name + "_df.csv")
-    complete_file_path = f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/{sanitized_view_name}_df.csv'
+    complete_file_path = f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/{sanitized_facility_name}_df.csv'
+
     try:
         # Loading the data into a DataFrame
         data_df = pd.read_csv(complete_file_path)
