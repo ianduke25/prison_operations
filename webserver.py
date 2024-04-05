@@ -71,8 +71,8 @@ if st.session_state['authenticated']:
                     file_name=f"{sanitized_view_name}.csv",
                     mime="text/csv"
                 )
-    else:
-        st.error("Failed to download the dataset.")
+            else:
+                st.error("Failed to download the dataset.")
 
         except Exception as e:
             st.error(f"An error occurred: {e}")
