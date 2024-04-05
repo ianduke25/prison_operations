@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
+import requests
 
 
 st.title('US Prison Population and Visitation')
@@ -41,14 +42,18 @@ if st.session_state['authenticated']:
     st.title("Secure Data Page")
     st.write("Welcome! You can now download the data.")
     
-
-    with open(file_path, "rb") as file:
+    response = requests.get(file_path)
+    if response.ok:
+        csv_content = response.content
         btn = st.download_button(
-                label="Download Full DataSet",
-                data=file,
-                file_name="total_df.csv",
-                mime="text/csv"
-            )
+            label="Download Full DataSet",
+            data=csv_content,
+            file_name="total_df.csv",
+            mime="text/csv"
+        )
+    else:
+        st.error("Failed to download the dataset.")
+
     
 
     file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
