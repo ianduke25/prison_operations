@@ -43,14 +43,22 @@ if not st.session_state['authenticated']:
 if st.session_state['authenticated']:
     st.title("Secure Data Page")
     st.write("Welcome! You can now download the data.")
-    data_df = pd.read_csv(file_path)
+    try:
+    # Fetch the content of the CSV file in bytes
+        response = requests.get(file_path)
+        response.raise_for_status()  # This will raise an exception for HTTP errors
+    
+    # Use the response content in the download button
+        btn = st.download_button(
+            label="Download Full DataSet",
+            data=response.content,  # This is the key change: using 'response.content' which is in bytes
+            file_name="total_df.csv",
+            mime="text/csv"
+        )
 
-    btn = st.download_button(
-                label="Download Full DataSet",
-                data=data_df,
-                file_name="total_df.csv",
-                mime="text/csv"
-            )
+    except requests.exceptions.RequestException as e:  # This catches HTTP errors and other Request exceptions
+        st.error(f"An error occurred: {e}")
+
     
 
     file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
