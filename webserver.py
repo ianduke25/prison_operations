@@ -47,7 +47,7 @@ if st.session_state['authenticated']:
 
     btn = st.download_button(
                 label="Download Full DataSet",
-                data=file,
+                data=data_df,
                 file_name="total_df.csv",
                 mime="text/csv"
             )
