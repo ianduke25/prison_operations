@@ -62,13 +62,18 @@ if st.session_state['authenticated']:
     complete_file_path = os.path.join(file_path_small, sanitized_view_name + "_df.csv")
     if os.path.exists(complete_file_path):
         try:
-            with open(complete_file_path, "rb") as file:
+            response = requests.get(complete_file_path)
+            if response.ok:
+                csv_content = response.content
                 btn = st.download_button(
                     label=f"Download {user_input} DataSet",
-                    data=file,
+                    data=csv_content,
                     file_name=f"{sanitized_view_name}.csv",
                     mime="text/csv"
                 )
+    else:
+        st.error("Failed to download the dataset.")
+
         except Exception as e:
             st.error(f"An error occurred: {e}")
     else:
