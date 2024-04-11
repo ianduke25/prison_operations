@@ -143,3 +143,52 @@ if facility_name:
         st.error(f"Data file for {facility_name} not found.")
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
+def sanitize_name(name):
+    """Sanitize names for consistent comparison."""
+    # Convert to lower case, strip whitespace, and replace special characters if needed
+    sanitized = name.lower().strip().replace(' ', '_')  # Adjust this based on your specific needs
+    return sanitized
+new_df =  pd.read_csv('https://raw.githubusercontent.com/lksanterre/prison/main/facilities/facilities.csv')
+
+fig = go.Figure()
+selected_facility = sanitize_name(facility_name)
+for index, row in new_df.iterrows():
+    # Sanitize the name from the DataFrame for comparison
+    sanitized_name = sanitize_name(row['name'])
+    color = 'red' if sanitized_name == selected_facility else 'blue'
+    fig.add_trace(go.Scattermapbox(
+        lon=[row['long']],
+        lat=[row['lat']],
+        mode='markers+text',  # For adding text labels beside markers
+        marker=go.scattermapbox.Marker(
+            size=9,
+            color=color,
+            opacity=1 if color == 'blue' else 0.9
+        ),
+        text=row['name'],  # Original name for display
+        hoverinfo='text+name',
+        #hovertext="<b style='color:white;'>" + row['name'] + "</b>",  # Attempt to make hover text white
+        name=row['name']
+    ))
+mapbox_access_token = 'pk.eyJ1IjoibGtzYW50ZXJyZSIsImEiOiJjbHMwdWZwaGswNHZwMmtucTZvdXQ0dmQ4In0.atoTB2hBdxOrfAszlnLEfg'
+
+# Set mapbox and layout attributes
+fig.update_layout(
+    mapbox=dict(
+        accesstoken=mapbox_access_token,
+        zoom=3,
+        center=dict(lat=37.0902, lon=-95.7129),
+        style='streets'
+    ),
+    showlegend=False,
+    title='Interactive Map of Locations',
+    hoverlabel=dict(
+        bgcolor="black",  # Background color for hover
+        font_color="white",  # Font color for hover text
+        font_size=12,
+        font_family="Arial"
+    )
+)
+
+# Streamlit: Display the Plotly figure
+st.plotly_chart(fig, use_container_width=True)
