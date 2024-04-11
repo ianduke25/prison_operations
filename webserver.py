@@ -148,16 +148,14 @@ def sanitize_name(name):
     # Convert to lower case, strip whitespace, and replace special characters if needed
     sanitized = name.lower().strip().replace(' ', '_')  # Adjust this based on your specific needs
     return sanitized
-new_df =  pd.read_csv('https://raw.githubusercontent.com/lksanterre/prison/main/facilities/facilities.csv')
+new_df =  pd.read_csv('https://raw.githubusercontent.com/lksanterre/prison/main/facilities/location_data.csv')
 
 fig = go.Figure()
+
 selected_facility = sanitize_name(facility_name)
 for index, row in new_df.iterrows():
-    st.write(row)
-    
-for index, row in new_df.iterrows():
     # Sanitize the name from the DataFrame for comparison
-
+    sanitized_name = sanitize_name(row['name'])
     
     color = 'red' if sanitized_name == selected_facility else 'blue'
     fig.add_trace(go.Scattermapbox(
