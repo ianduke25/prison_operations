@@ -154,11 +154,7 @@ fig = go.Figure()
 selected_facility = sanitize_name(facility_name)
 for index, row in new_df.iterrows():
     # Sanitize the name from the DataFrame for comparison
-    try:
-        sanitized_name = sanitize_name(row['name'])
-    except KeyError:
-    # Handle the error, e.g., by skipping this row or using a default value
-        sanitized_name = 'default_name'
+
     
     color = 'red' if sanitized_name == selected_facility else 'blue'
     fig.add_trace(go.Scattermapbox(
