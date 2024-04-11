@@ -153,6 +153,9 @@ new_df =  pd.read_csv('https://raw.githubusercontent.com/lksanterre/prison/main/
 fig = go.Figure()
 selected_facility = sanitize_name(facility_name)
 for index, row in new_df.iterrows():
+    st.write(row)
+    
+for index, row in new_df.iterrows():
     # Sanitize the name from the DataFrame for comparison
 
     
