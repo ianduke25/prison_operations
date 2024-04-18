@@ -4,11 +4,20 @@ import requests
 import pandas as pd
 import plotly.graph_objs as go
 import streamlit as st
+from io import StringIO
+from prophet import Prophet
+from dateutil import parser
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
+from prophet.plot import plot_plotly, plot_components_plotly
+
 
 st.title('US Prison Population and Visitation')
 st.write('Nick Miller | Ian Duke | Tianyunxi (Emily) Yin | Caleb Hamblen | Lance Santerre')
 file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/total_df.csv'
-
+total_content = requests.get(file_path).content
+dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 
 users = {
     "lance": "lance",
@@ -52,61 +61,83 @@ if st.session_state['authenticated']:
     else:
         st.error("Failed to download the dataset.")
 
-    
 
-    file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
+    #file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
     user_input = st.text_input("Enter Name of Facility").upper()
     sanitized_view_name = re.sub(r'\W+', '_', user_input)
-    complete_file_path = f"{file_path_small}{sanitized_view_name}_df.csv"
-
+    
     
     # Try to fetch the file to see if it exists
-    response = requests.get(complete_file_path)
     if response.ok:
-        # If the request was successful, enable downloading
+        # Filter the DataFrame based on user input
         csv_content = response.content
-        btn = st.download_button(
-            label=f"Download {user_input} DataSet",
-            data=csv_content,
-            file_name=f"{sanitized_view_name}.csv",
-            mime="text/csv"
-        )
+        total_df = pd.read_csv(StringIO(csv_content.decode('utf-8')))
+        selected_data = total_df[total_df['title'] == sanitized_view_name]
+
+        if not selected_data.empty:
+            btn_facility = st.download_button(
+                label=f"Download {user_input} Data",
+                data=selected_data.to_csv(index=False).encode(),
+                file_name=f"{sanitized_view_name}_data.csv",
+                mime="text/csv"
+            )
+        else:
+            if user_input:  # Only show the warning if the user has actually input something
+                st.warning("The specified facility name does not exist in the dataset. Please try again.")
     else:
-        # If the request failed, show an appropriate message
-        if user_input:  # Only show the warning if the user has actually input something
-            st.warning("The specified facility name does not exist or there was an error fetching the dataset. Please try again.")
-    
+        st.error("Failed to load the dataset.")
 
 # Visualization accessible to all users
-options = ['FMC_FORT_WORTH','FCI_BECKLEY','USP_YAZOO_CITY','FCI_BIG_SPRING','FCI_HAZELTON','FMC_DEVENS','FCI_SANDSTONE','FCI_PEKIN','FCI_YAZOO_CITY_LOW',
- 'FCI_YAZOO_CITY_MEDIUM','USP_COLEMAN_I','FCI_SAFFORD','FCI_MCKEAN','MCC_NEW_YORK','FCI_TERRE_HAUTE','FCI_THREE_RIVERS','USP_BEAUMONT','FCI_OAKDALE_II',
- 'USP_BIG_SANDY','FCI_BUTNER_LOW','FCI_DUBLIN','FCI_OXFORD','FCI_BEAUMONT_LOW','USP_ATWATER','MCC_SAN_DIEGO','FCI_VICTORVILLE_MEDIUM_II','FCI_TALLAHASSEE',
- 'FCI_ALLENWOOD_LOW','FCI_DANBURY','FCI_LOMPOC','FDC_SEATAC','USP_LEAVENWORTH','MDC_GUAYNABO','FCI_GILMER','USP_HAZELTON','FCI_MANCHESTER','FCI_OTISVILLE',
- 'FCI_PETERSBURG_LOW','FPC_DULUTH','FCI_PETERSBURG_MEDIUM','FCI_MORGANTOWN','FPC_PENSACOLA','FCI_SEAGOVILLE','FCI_ALICEVILLE','FCI_PHOENIX','FCI_ENGLEWOOD',
-'FCI_FORREST_CITY_MEDIUM','FCI_MENDOTA','FCI_BUTNER_MEDIUM_II','FCI_BUTNER_MEDIUM_I','FCI_BEAUMONT_MEDIUM','MCC_CHICAGO','FCI_COLEMAN_LOW','FCI_LA_TUNA',
- 'USP_COLEMAN_II','FCI_TALLADEGA','FCI_SCHUYLKILL','USP_LOMPOC','FCI_THOMSON','FCI_BERLIN','FCI_POLLOCK','FCI_WASECA','USP_LEE','FMC_ROCHESTER','FCI_BASTROP',
- 'USP_MARION','FPC_MONTGOMERY','MDC_LOS_ANGELES','FCI_OAKDALE_I','FCI_ASHLAND','FCI_FORREST_CITY_LOW','MCFP_SPRINGFIELD','FCI_ALLENWOOD_MEDIUM','USP_TERRE_HAUTE',
- 'FCI_JESUP','FCI_MARIANNA','FCI_ESTILL','USP_MCCREARY','FCI_BENNETTSVILLE','FCI_MCDOWELL','FCI_VICTORVILLE_MEDIUM_I','FCI_FLORENCE','FCI_ELKTON','FCI_FORT_DIX',
- 'FCI_TERMINAL_ISLAND','FCI_WILLIAMSBURG','FCI_EDGEFIELD','FCI_TUCSON','FTC_OKLAHOMA_CITY','FMC_LEXINGTON','FCI_MIAMI','USP_LEWISBURG','FCI_EL_RENO','FMC_BUTNER',
-'USP_VICTORVILLE','FCI_SHERIDAN','FCI_FAIRTON','FCI_GREENVILLE','FPC_YANKTON','FCI_MEMPHIS','FCI_HERLONG','FPC_ALDERSON','FDC_HOUSTON','FMC_CARSWELL','FCI_CUMBERLAND',
-'USP_FLORENCE_HIGH','FDC_PHILADELPHIA','USP_TUCSON','FCI_MILAN','FCI_TEXARKANA','FCI_COLEMAN_MEDIUM','USP_ALLENWOOD','MDC_BROOKLYN','USP_FLORENCE_ADMAX','FPC_BRYAN',
- 'USP_POLLOCK','USP_CANAAN','USP_THOMSON','FDC_HONOLULU','USP_ATLANTA','FDC_MIAMI','FCI_RAY_BROOK','FCI_LORETTO']
+# options = ['FMC_FORT_WORTH','FCI_BECKLEY','USP_YAZOO_CITY','FCI_BIG_SPRING','FCI_HAZELTON','FMC_DEVENS','FCI_SANDSTONE','FCI_PEKIN','FCI_YAZOO_CITY_LOW',
+#  'FCI_YAZOO_CITY_MEDIUM','USP_COLEMAN_I','FCI_SAFFORD','FCI_MCKEAN','MCC_NEW_YORK','FCI_TERRE_HAUTE','FCI_THREE_RIVERS','USP_BEAUMONT','FCI_OAKDALE_II',
+#  'USP_BIG_SANDY','FCI_BUTNER_LOW','FCI_DUBLIN','FCI_OXFORD','FCI_BEAUMONT_LOW','USP_ATWATER','MCC_SAN_DIEGO','FCI_VICTORVILLE_MEDIUM_II','FCI_TALLAHASSEE',
+#  'FCI_ALLENWOOD_LOW','FCI_DANBURY','FCI_LOMPOC','FDC_SEATAC','USP_LEAVENWORTH','MDC_GUAYNABO','FCI_GILMER','USP_HAZELTON','FCI_MANCHESTER','FCI_OTISVILLE',
+#  'FCI_PETERSBURG_LOW','FPC_DULUTH','FCI_PETERSBURG_MEDIUM','FCI_MORGANTOWN','FPC_PENSACOLA','FCI_SEAGOVILLE','FCI_ALICEVILLE','FCI_PHOENIX','FCI_ENGLEWOOD',
+# 'FCI_FORREST_CITY_MEDIUM','FCI_MENDOTA','FCI_BUTNER_MEDIUM_II','FCI_BUTNER_MEDIUM_I','FCI_BEAUMONT_MEDIUM','MCC_CHICAGO','FCI_COLEMAN_LOW','FCI_LA_TUNA',
+#  'USP_COLEMAN_II','FCI_TALLADEGA','FCI_SCHUYLKILL','USP_LOMPOC','FCI_THOMSON','FCI_BERLIN','FCI_POLLOCK','FCI_WASECA','USP_LEE','FMC_ROCHESTER','FCI_BASTROP',
+#  'USP_MARION','FPC_MONTGOMERY','MDC_LOS_ANGELES','FCI_OAKDALE_I','FCI_ASHLAND','FCI_FORREST_CITY_LOW','MCFP_SPRINGFIELD','FCI_ALLENWOOD_MEDIUM','USP_TERRE_HAUTE',
+#  'FCI_JESUP','FCI_MARIANNA','FCI_ESTILL','USP_MCCREARY','FCI_BENNETTSVILLE','FCI_MCDOWELL','FCI_VICTORVILLE_MEDIUM_I','FCI_FLORENCE','FCI_ELKTON','FCI_FORT_DIX',
+#  'FCI_TERMINAL_ISLAND','FCI_WILLIAMSBURG','FCI_EDGEFIELD','FCI_TUCSON','FTC_OKLAHOMA_CITY','FMC_LEXINGTON','FCI_MIAMI','USP_LEWISBURG','FCI_EL_RENO','FMC_BUTNER',
+# 'USP_VICTORVILLE','FCI_SHERIDAN','FCI_FAIRTON','FCI_GREENVILLE','FPC_YANKTON','FCI_MEMPHIS','FCI_HERLONG','FPC_ALDERSON','FDC_HOUSTON','FMC_CARSWELL','FCI_CUMBERLAND',
+# 'USP_FLORENCE_HIGH','FDC_PHILADELPHIA','USP_TUCSON','FCI_MILAN','FCI_TEXARKANA','FCI_COLEMAN_MEDIUM','USP_ALLENWOOD','MDC_BROOKLYN','USP_FLORENCE_ADMAX','FPC_BRYAN',
+#  'USP_POLLOCK','USP_CANAAN','USP_THOMSON','FDC_HONOLULU','USP_ATLANTA','FDC_MIAMI','FCI_RAY_BROOK','FCI_LORETTO']
 
 
-facility_name = st.selectbox("Choose a Facility", options, index=0, placeholder="Choose an option")
+facility_name = st.selectbox('Select Facility', dataframe['title'].unique(), placeholder="Choose an option")
 
 
 
+#facility_name = st.selectbox("Choose a Facility", options, index=0, placeholder="Choose an option")
+
+
+def prophet_preprocess_fac(df):
+    df['datetime_of_data'] = df['datetime_of_data'].apply(lambda x: parser.parse(x))
+    df['ds'] = pd.to_datetime(df['datetime_of_data'], format='%Y-%m-%d %H:%M:%S %Z')
+    df['ds'] = df['ds'].dt.tz_localize(None)
+    df['y'] = df["population"]
+    df.set_index('ds', inplace=True)
+
+    daily_data = df.copy()
+    daily_data = daily_data['y']
+    #fill missing days with median rolling window = 5
+    rolling_median = daily_data.rolling(window=5, min_periods=1, center=True).median()
+    daily_data_filled = daily_data.fillna(rolling_median)
+    # Remove timezone from the 'Datetime' index
+    daily_data_filled.index = daily_data_filled.index.tz_localize(None)
+    
+    # Reset the index to make the Datetime a regular column
+    df_reset = daily_data_filled.reset_index()
+    #Isolate time and predictor columns
+    df_reset = df_reset[['ds', 'y']]
+
+    return df_reset
 
 if facility_name:
-    # Normalize facility name to match file naming convention
-    sanitized_facility_name = re.sub(r'\W+', '_', facility_name).upper()
-    complete_file_path = f'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/{sanitized_facility_name}_df.csv'
-
+    
     try:
         # Loading the data into a DataFrame
-        data_df = pd.read_csv(complete_file_path)
-
+        data_df = dataframe[dataframe['title'] == facility_name]
+        train = prophet_preprocess_fac(data_df)
         # Convert the 'datetime_of_data' column to datetime type for proper sorting
         if 'datetime_of_data' in data_df.columns and 'visiting_status' in data_df.columns:
             data_df['datetime_of_data'] = data_df['datetime_of_data'].str[:-4]
@@ -139,6 +170,33 @@ if facility_name:
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.error("Required columns not found in the data.")
+        
+        # time-series model
+        
+        m = Prophet()
+        m.fit(train)
+        future = m.make_future_dataframe(periods=7)
+        forecast = m.predict(future)
+        forecast_last_7_days = forecast.tail(7)
+        # Create a Plotly figure
+        fig = go.Figure()
+        # Add the predicted values and confidence intervals to the figure
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='Predicted',
+                                line=dict(color='blue')))
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_lower'], mode='lines', name='Lower Bound',
+                                fill=None, line=dict(color='lightblue')))
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
+                                fill='tonexty', line=dict(color='lightblue')))
+        # Set x-axis range to focus on the last 7 days
+        fig.update_xaxes(range=[forecast_last_7_days['ds'].min(), forecast_last_7_days['ds'].max()])
+        # Update layout
+        fig.update_layout(title='Next 7 Days Predictions',
+                        xaxis_title='Date', yaxis_title='Population Prediction',
+                        showlegend=True, plot_bgcolor='rgba(0, 0, 0, 0)')
+        fig.show()
+
+
+
     except FileNotFoundError:
         st.error(f"Data file for {facility_name} not found.")
     except Exception as e:
