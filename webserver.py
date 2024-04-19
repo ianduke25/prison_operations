@@ -72,7 +72,7 @@ if st.session_state['authenticated']:
         # Filter the DataFrame based on user input
         csv_content = response.content
         total_df = pd.read_csv(StringIO(csv_content.decode('utf-8')))
-        selected_data = total_df[total_df['title'] == sanitized_view_name]
+        selected_data = total_df[total_df['title'] == user_input]
 
         if not selected_data.empty:
             btn_facility = st.download_button(
@@ -140,7 +140,7 @@ if facility_name:
         train = prophet_preprocess_fac(data_df)
         # Convert the 'datetime_of_data' column to datetime type for proper sorting
         if 'datetime_of_data' in data_df.columns and 'visiting_status' in data_df.columns:
-            data_df['datetime_of_data'] = data_df['datetime_of_data'].str[:-4]
+            data_df['datetime_of_data'] = data_df['datetime_of_data'].astype(str).str[:-4]
             data_df['datetime_of_data'] = pd.to_datetime(data_df['datetime_of_data'])
 
             # Plot with Plotly - creating a line chart for population
@@ -193,7 +193,7 @@ if facility_name:
         fig.update_layout(title='Next 7 Days Predictions',
                         xaxis_title='Date', yaxis_title='Population Prediction',
                         showlegend=True, plot_bgcolor='rgba(0, 0, 0, 0)')
-        fig.show()
+        st.plotly_chart(fig, use_container_width=True)
 
 
 
