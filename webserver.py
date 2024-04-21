@@ -179,6 +179,9 @@ if facility_name:
         future = m.make_future_dataframe(periods=7)
         forecast = m.predict(future)
         forecast_last_7_days = forecast.tail(7)
+        ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
+        ml_pred = pd.read_csv(StringIO(ml_content.decode('utf-8')))
+        
         # Create a Plotly figure
         fig = go.Figure()
         # Add the predicted values and confidence intervals to the figure
@@ -188,6 +191,11 @@ if facility_name:
                                 fill=None, line=dict(color='lightblue')))
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
                                 fill='tonexty', line=dict(color='lightblue')))
+        fig.add_trace(go.Scatter(x=ml_pred['ds'], y=ml_pred['lockdown_probability'], mode='markers', name='Lockdown Probability',
+                                marker=dict(color=ml_pred['lockdown_probability'],  # Use probability as color scale
+                                            colorscale='Reds', size=10,
+                                            showscale=True,  # Display a color scale
+                                            colorbar=dict(title='Lockdown Probability'))))
         # Set x-axis range to focus on the last 7 days
         fig.update_xaxes(range=[forecast_last_7_days['ds'].min(), forecast_last_7_days['ds'].max()])
         # Update layout
