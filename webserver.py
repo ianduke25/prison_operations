@@ -140,7 +140,7 @@ if facility_name:
     try:
         # Loading the data into a DataFrame
         data_df = dataframe[dataframe['title'] == facility_name]
-        ml_pred = ml_df[ml_df['title'] == facility_name]
+        #ml_pred = ml_df[ml_df['title'] == facility_name]
         train = prophet_preprocess_fac(data_df)
         # Convert the 'datetime_of_data' column to datetime type for proper sorting
         if 'datetime_of_data' in data_df.columns and 'visiting_status' in data_df.columns:
