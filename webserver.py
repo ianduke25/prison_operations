@@ -132,8 +132,8 @@ def prophet_preprocess_fac(df):
 
     return df_reset
 
-ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
-ml_df = pd.read_csv(StringIO(ml_content.decode('utf-8')))
+# ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
+# ml_df = pd.read_csv(StringIO(ml_content.decode('utf-8')))
 
 if facility_name:
     
@@ -195,11 +195,11 @@ if facility_name:
                                 fill=None, line=dict(color='lightblue')))
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
                                 fill='tonexty', line=dict(color='lightblue')))
-        marker_hover_text = [f"Population: {yhat}, Lockdown Probability: {lockdown_prob:.2f}" 
-                             for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
-        fig.add_trace(go.Scatter(x=ml_pred['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
-                                 text=marker_hover_text, hoverinfo='text', 
-                                marker=dict(color='red', size=10)))
+        # marker_hover_text = [f"Population: {yhat}, Lockdown Probability: {lockdown_prob:.2f}" 
+        #                      for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
+        # fig.add_trace(go.Scatter(x=ml_pred['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
+        #                          text=marker_hover_text, hoverinfo='text', 
+        #                         marker=dict(color='red', size=10)))
 
         # Set x-axis range to focus on the last 7 days
         fig.update_xaxes(range=[forecast_last_7_days['ds'].min(), forecast_last_7_days['ds'].max()])
