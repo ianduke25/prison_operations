@@ -15,7 +15,7 @@ from prophet.plot import plot_plotly, plot_components_plotly
 
 st.title('US Prison Population and Visitation')
 st.write('Nick Miller | Ian Duke | Tianyunxi (Emily) Yin | Caleb Hamblen | Lance Santerre')
-file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/total_df.csv'
+file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/master_dataframe_cleaned.csv'
 total_content = requests.get(file_path).content
 dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 
