@@ -1,3 +1,4 @@
+from prophet.plot import plot_plotly, plot_components_plotly
 import os
 import re
 import requests
@@ -10,7 +11,6 @@ from dateutil import parser
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
-from prophet.plot import plot_plotly, plot_components_plotly
 
 
 st.title('US Prison Population and Visitation')
@@ -29,12 +29,15 @@ if 'authenticated' not in st.session_state:
     st.session_state['authenticated'] = False
 
 # Function to verify login credentials
+
+
 def login(user, password):
     if user in users and users[user] == password:
         st.session_state['authenticated'] = True
         st.success("Logged in successfully!")
     else:
         st.error("Incorrect username or password")
+
 
 # Login form for unauthenticated users
 if not st.session_state['authenticated']:
@@ -48,7 +51,7 @@ if not st.session_state['authenticated']:
 if st.session_state['authenticated']:
     st.title("Secure Data Page")
     st.write("Welcome! You can now download the data.")
-    
+
     response = requests.get(file_path)
     if response.ok:
         csv_content = response.content
@@ -61,12 +64,10 @@ if st.session_state['authenticated']:
     else:
         st.error("Failed to download the dataset.")
 
-
-    #file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
+    # file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
     user_input = st.text_input("Enter Name of Facility").upper()
     sanitized_view_name = re.sub(r'\W+', '_', user_input)
-    
-    
+
     # Try to fetch the file to see if it exists
     if response.ok:
         # Filter the DataFrame based on user input
@@ -83,7 +84,8 @@ if st.session_state['authenticated']:
             )
         else:
             if user_input:  # Only show the warning if the user has actually input something
-                st.warning("The specified facility name does not exist in the dataset. Please try again.")
+                st.warning(
+                    "The specified facility name does not exist in the dataset. Please try again.")
     else:
         st.error("Failed to load the dataset.")
 
@@ -103,31 +105,36 @@ if st.session_state['authenticated']:
 #  'USP_POLLOCK','USP_CANAAN','USP_THOMSON','FDC_HONOLULU','USP_ATLANTA','FDC_MIAMI','FCI_RAY_BROOK','FCI_LORETTO']
 
 
-facility_name = st.selectbox('Select Facility', dataframe['title'].unique(), placeholder="Choose an option")
+facility_name = st.selectbox(
+    'Select Facility',
+    dataframe['title'].unique(),
+    placeholder="Choose an option")
 
 
-
-#facility_name = st.selectbox("Choose a Facility", options, index=0, placeholder="Choose an option")
+# facility_name = st.selectbox("Choose a Facility", options, index=0, placeholder="Choose an option")
 
 
 def prophet_preprocess_fac(df):
-    df['datetime_of_data'] = df['datetime_of_data'].apply(lambda x: parser.parse(x))
-    df['ds'] = pd.to_datetime(df['datetime_of_data'], format='%Y-%m-%d %H:%M:%S %Z')
+    df['datetime_of_data'] = df['datetime_of_data'].apply(
+        lambda x: parser.parse(x))
+    df['ds'] = pd.to_datetime(df['datetime_of_data'],
+                              format='%Y-%m-%d %H:%M:%S %Z')
     df['ds'] = df['ds'].dt.tz_localize(None)
     df['y'] = df["population"]
     df.set_index('ds', inplace=True)
 
     daily_data = df.copy()
     daily_data = daily_data['y']
-    #fill missing days with median rolling window = 5
-    rolling_median = daily_data.rolling(window=5, min_periods=1, center=True).median()
+    # fill missing days with median rolling window = 5
+    rolling_median = daily_data.rolling(
+        window=5, min_periods=1, center=True).median()
     daily_data_filled = daily_data.fillna(rolling_median)
     # Remove timezone from the 'Datetime' index
     daily_data_filled.index = daily_data_filled.index.tz_localize(None)
-    
+
     # Reset the index to make the Datetime a regular column
     df_reset = daily_data_filled.reset_index()
-    #Isolate time and predictor columns
+    # Isolate time and predictor columns
     df_reset = df_reset[['ds', 'y']]
 
     return df_reset
@@ -135,32 +142,47 @@ def prophet_preprocess_fac(df):
 # ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
 # ml_df = pd.read_csv(StringIO(ml_content.decode('utf-8')))
 
+
 if facility_name:
-    
+
     try:
         # Loading the data into a DataFrame
         data_df = dataframe[dataframe['title'] == facility_name]
-        #ml_pred = ml_df[ml_df['title'] == facility_name]
+        # ml_pred = ml_df[ml_df['title'] == facility_name]
         train = prophet_preprocess_fac(data_df)
-        # Convert the 'datetime_of_data' column to datetime type for proper sorting
+        # Convert the 'datetime_of_data' column to datetime type for proper
+        # sorting
         if 'datetime_of_data' in data_df.columns and 'visiting_status' in data_df.columns:
-            data_df['datetime_of_data'] = data_df['datetime_of_data'].astype(str).str[:-4]
-            data_df['datetime_of_data'] = pd.to_datetime(data_df['datetime_of_data'])
+            data_df['datetime_of_data'] = data_df['datetime_of_data'].astype(
+                str).str[:-4]
+            data_df['datetime_of_data'] = pd.to_datetime(
+                data_df['datetime_of_data'])
             data_df = data_df.sort_values(by='datetime_of_data')
 
             # Plot with Plotly - creating a line chart for population
             fig = go.Figure()
 
             # Add line for population
-            fig.add_trace(go.Scatter(x=data_df['datetime_of_data'], y=data_df['population'],
-                                    mode='lines', name='Population',
-                                    line=dict(color='blue')))
+            fig.add_trace(
+                go.Scatter(
+                    x=data_df['datetime_of_data'],
+                    y=data_df['population'],
+                    mode='lines',
+                    name='Population',
+                    line=dict(
+                        color='blue')))
 
             # Add markers for points where the status is 'Suspended'
             suspended_data = data_df[data_df['visiting_status'] == 'Suspended']
-            fig.add_trace(go.Scatter(x=suspended_data['datetime_of_data'], y=suspended_data['population'],
-                                    mode='markers', name='Suspended',
-                                    marker=dict(color='red', size=10)))
+            fig.add_trace(
+                go.Scatter(
+                    x=suspended_data['datetime_of_data'],
+                    y=suspended_data['population'],
+                    mode='markers',
+                    name='Suspended',
+                    marker=dict(
+                        color='red',
+                        size=10)))
 
             # Update layout for better axis fit and to add title
             population_min = data_df['population'].min()
@@ -168,59 +190,91 @@ if facility_name:
             padding = (population_max - population_min) * 0.1  # 10% padding
             fig.update_layout(
                 title=f"Data Visualization for: {facility_name}",
-                yaxis=dict(range=[population_min - padding, population_max + padding]),
+                yaxis=dict(range=[population_min - padding,
+                           population_max + padding]),
                 transition_duration=500
             )
 
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.error("Required columns not found in the data.")
-        
+
         # time-series model
-        
+
         m = Prophet()
         m.fit(train)
         future = m.make_future_dataframe(periods=7)
         forecast = m.predict(future)
         forecast_last_7_days = forecast.tail(7)
-        ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
+        ml_content = requests.get(
+            'https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
         ml_pred = pd.read_csv(StringIO(ml_content.decode('utf-8')))
-        
+
         # Create a Plotly figure
         fig = go.Figure()
         # Add the predicted values and confidence intervals to the figure
-        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='Predicted',
-                                line=dict(color='blue')))
-        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_lower'], mode='lines', name='Lower Bound',
-                                fill=None, line=dict(color='lightblue')))
-        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
-                                fill='tonexty', line=dict(color='lightblue')))
-        # marker_hover_text = [f"Population: {yhat}, Lockdown Probability: {lockdown_prob:.2f}" 
+        fig.add_trace(
+            go.Scatter(
+                x=forecast['ds'],
+                y=forecast['yhat'],
+                mode='lines',
+                name='Predicted',
+                line=dict(
+                    color='blue')))
+        fig.add_trace(
+            go.Scatter(
+                x=forecast['ds'],
+                y=forecast['yhat_lower'],
+                mode='lines',
+                name='Lower Bound',
+                fill=None,
+                line=dict(
+                    color='lightblue')))
+        fig.add_trace(
+            go.Scatter(
+                x=forecast['ds'],
+                y=forecast['yhat_upper'],
+                mode='lines',
+                name='Upper Bound',
+                fill='tonexty',
+                line=dict(
+                    color='lightblue')))
+        # marker_hover_text = [f"Population: {yhat}, Lockdown Probability: {lockdown_prob:.2f}"
         #                      for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
         # fig.add_trace(go.Scatter(x=ml_pred['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
-        #                          text=marker_hover_text, hoverinfo='text', 
+        #                          text=marker_hover_text, hoverinfo='text',
         #                         marker=dict(color='red', size=10)))
 
         # Set x-axis range to focus on the last 7 days
-        fig.update_xaxes(range=[forecast_last_7_days['ds'].min(), forecast_last_7_days['ds'].max()])
+        fig.update_xaxes(
+            range=[
+                forecast_last_7_days['ds'].min(),
+                forecast_last_7_days['ds'].max()])
         # Update layout
-        fig.update_layout(title='Next 7 Days Predictions',
-                        xaxis_title='Date', yaxis_title='Population Prediction',
-                        showlegend=True, plot_bgcolor='rgba(0, 0, 0, 0)')
+        fig.update_layout(
+            title='Next 7 Days Predictions',
+            xaxis_title='Date',
+            yaxis_title='Population Prediction',
+            showlegend=True,
+            plot_bgcolor='rgba(0, 0, 0, 0)')
         st.plotly_chart(fig, use_container_width=True)
-
-
 
     except FileNotFoundError:
         st.error(f"Data file for {facility_name} not found.")
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
+
+
 def sanitize_name(name):
     """Sanitize names for consistent comparison."""
     # Convert to lower case, strip whitespace, and replace special characters if needed
-    sanitized = name.lower().strip().replace(' ', '_')  # Adjust this based on your specific needs
+    # Adjust this based on your specific needs
+    sanitized = name.lower().strip().replace(' ', '_')
     return sanitized
-new_df =  pd.read_csv('https://raw.githubusercontent.com/lksanterre/prison/main/facilities/location_data.csv')
+
+
+new_df = pd.read_csv(
+    'https://raw.githubusercontent.com/lksanterre/prison/main/facilities/location_data.csv')
 
 fig = go.Figure()
 
@@ -228,7 +282,7 @@ selected_facility = sanitize_name(facility_name)
 for index, row in new_df.iterrows():
     # Sanitize the name from the DataFrame for comparison
     sanitized_name = sanitize_name(row['name'])
-    
+
     color = 'red' if sanitized_name == selected_facility else 'blue'
     fig.add_trace(go.Scattermapbox(
         lon=[row['long']],
@@ -241,7 +295,8 @@ for index, row in new_df.iterrows():
         ),
         text=row['name'],  # Original name for display
         hoverinfo='text+name',
-        #hovertext="<b style='color:white;'>" + row['name'] + "</b>",  # Attempt to make hover text white
+        # hovertext="<b style='color:white;'>" + row['name'] + "</b>",  #
+        # Attempt to make hover text white
         name=row['name']
     ))
 mapbox_access_token = 'pk.eyJ1IjoibGtzYW50ZXJyZSIsImEiOiJjbHMwdWZwaGswNHZwMmtucTZvdXQ0dmQ4In0.atoTB2hBdxOrfAszlnLEfg'
