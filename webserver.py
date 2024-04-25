@@ -204,8 +204,8 @@ if facility_name:
         m = Prophet()
         m.fit(train)
         future = m.make_future_dataframe(periods=7)
-        forecast = m.predict(future)
-        forecast_last_7_days = forecast.tail(7)
+        forecast = m.predict(future).tail(7)
+        # forecast_last_7_days = forecast.tail(7)
         ml_content = requests.get(
             'https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
         ml_pred = pd.read_csv(StringIO(ml_content.decode('utf-8')))
