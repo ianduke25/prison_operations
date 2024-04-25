@@ -213,50 +213,25 @@ if facility_name:
         # Create a Plotly figure
         fig = go.Figure()
         # Add the predicted values and confidence intervals to the figure
-        fig.add_trace(
-            go.Scatter(
-                x=forecast['ds'],
-                y=forecast['yhat'],
-                mode='lines',
-                name='Predicted',
-                line=dict(
-                    color='blue')))
-        fig.add_trace(
-            go.Scatter(
-                x=forecast['ds'],
-                y=forecast['yhat_lower'],
-                mode='lines',
-                name='Lower Bound',
-                fill=None,
-                line=dict(
-                    color='lightblue')))
-        fig.add_trace(
-            go.Scatter(
-                x=forecast['ds'],
-                y=forecast['yhat_upper'],
-                mode='lines',
-                name='Upper Bound',
-                fill='tonexty',
-                line=dict(
-                    color='lightblue')))
-        # marker_hover_text = [f"Population: {yhat}, Lockdown Probability: {lockdown_prob:.2f}"
-        #                      for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
-        # fig.add_trace(go.Scatter(x=ml_pred['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
-        #                          text=marker_hover_text, hoverinfo='text',
-        #                         marker=dict(color='red', size=10)))
-
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='Predicted',
+                                line=dict(color='blue')))
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_lower'], mode='lines', name='Lower Bound',
+                                fill=None, line=dict(color='lightblue')))
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
+                                fill='tonexty', line=dict(color='lightblue')))
+        marker_hover_text = [f"Population: {yhat:.0f}, Lockdown Probability: {lockdown_prob:.2f}" 
+                               for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
+                                   text=marker_hover_text, hoverinfo='text', 
+                               marker=dict(color='red', size=10)))
+        
         # Set x-axis range to focus on the last 7 days
-        fig.update_xaxes(
-            range=[
-                forecast_last_7_days['ds'].min(),
-                forecast_last_7_days['ds'].max()])
+        fig.update_xaxes(tick0=None) # Start ticks from the first data point)
         # Update layout
-        fig.update_layout(
-            title='Next 7 Days Predictions',
-            xaxis_title='Date',
-            yaxis_title='Population Prediction',
-            showlegend=True,
-            plot_bgcolor='rgba(0, 0, 0, 0)')
+        fig.update_layout(title='Next 7 Days Predictions',
+                        xaxis_title='Date', yaxis_title='Population Prediction',
+                        showlegend=True)
+    
         st.plotly_chart(fig, use_container_width=True)
 
     except FileNotFoundError:
