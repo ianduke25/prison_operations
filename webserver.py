@@ -207,7 +207,7 @@ if facility_name:
         forecast = m.predict(future).tail(7)
         # forecast_last_7_days = forecast.tail(7)
         ml_content = requests.get(
-            'https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
+            'https://raw.githubusercontent.com/lksanterre/prison/main/data_update/forecast.csv').content
         ml_pred = pd.read_csv(StringIO(ml_content.decode('utf-8')))
 
         # Create a Plotly figure
