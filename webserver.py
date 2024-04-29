@@ -234,6 +234,38 @@ if facility_name:
     
         st.plotly_chart(fig, use_container_width=True)
 
+    
+        #aggregated stats plot added below
+        
+        avg_population_by_prison = dataframe.groupby('title')['population'].mean().reset_index()
+        recent_index = dataframe.groupby('title')['datetime_of_data'].idxmax()
+        most_recent_data = dataframe.loc[recent_index]
+        merged_df = avg_population_by_prison.join(most_recent_data.set_index('title'), on='title', rsuffix='_recent')
+        merged_df = merged_df.rename(columns={'population': 'avg_population'})
+        # Load the CSV file containing the average population and current population data
+        
+        # Extract relevant columns and filter data based on the selected facility
+        avg_pop_filtered = merged_df[['title', 'avg_population', 'population_recent']]
+        avg_pop_filtered = avg_pop_filtered[avg_pop_filtered['title'] == facility_name]
+        
+        # Check if data is available for the selected facility
+        if not avg_pop_filtered.empty:
+            # Create a bar plot for average population and current population
+            fig_bar = go.Figure()
+            fig_bar.add_trace(go.Bar(x=['Average Population', 'Current Population'],
+                                     y=[avg_pop_filtered['avg_population'].iloc[0], avg_pop_filtered['population_recent'].iloc[0]],
+                                     marker_color=['blue', 'lightblue'],
+                                     text=[f"Average: {avg_pop_filtered['avg_population'].iloc[0]}",
+                                           f"Current: {avg_pop_filtered['population_recent'].iloc[0]}"],
+                                     textposition='auto'
+                                     ))
+            fig_bar.update_layout(title=f"Average and Current Population for {facility_name}",
+                                  xaxis_title='Population Type',
+                                  yaxis_title='Population',
+                                  showlegend=False)
+            
+            st.plotly_chart(fig_bar, use_container_width=True)
+
     except FileNotFoundError:
         st.error(f"Data file for {facility_name} not found.")
     except Exception as e:
