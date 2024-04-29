@@ -10,84 +10,171 @@ from prophet import Prophet
 from dateutil import parser
 import matplotlib.pyplot as plt
 import warnings
+from datetime import datetime
 warnings.filterwarnings("ignore")
 
+# Define the function to analyze suspension rates
+def suspension_count(data, facility, before):
+    filtered_df = data[data['datetime_of_data'] >= before]
+    filtered_df = filtered_df[filtered_df['title'] == facility]
+    suspended = filtered_df[filtered_df['visiting_status'] == 'Suspended']
+    count = len(suspended)
+    total = len(filtered_df)
+    return (count / total) * 100 if total > 0 else 0
 
-st.title('US Prison Population and Visitation')
-st.write('Nick Miller | Ian Duke | Tianyunxi (Emily) Yin | Caleb Hamblen | Lance Santerre')
-file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/data_update/master_dataframe_cleaned.csv'
+def set_css():
+    st.markdown("""
+        <style>
+        html, body, [class*="css"] {
+            font-family: 'Open Sans', sans-serif;
+            color: black;
+            background-color: #c2d9ff;
+            line-height: 1.5;
+        }
+        .stTextInput > div > div > input {
+            background-color: #fff;
+            color: black;
+            border-radius: 0;
+            border: 1px solid black;
+        }
+        .st-bb {
+            background-color: #white;
+        }
+        .st-bj {
+            color: white;
+        }
+        .stDownloadButton>button {
+            background-color: #c2d9ff;
+            color: black;
+            font-family: 'Open Sans', sans-serif;
+            border-radius: 0;
+            border: 1px solid black;
+        }
+        .css-1d391kg {
+            background-color: #c2d9ff;
+            color: #c2d9ff;
+        }
+        .stSelectbox > div > div > div {
+            background-color: #fff;
+            color: black;
+            border-radius: 0;
+            border: 1px solid black;
+        }
+        .st-b7 {
+            background-color: #fff;
+            border-radius: 0;
+            border: none;
+        }
+        .st-cx {
+            border-radius: 0;
+        }
+        .st-dd {
+            border-radius: 0;
+        }
+        .st-bw {
+            border-radius: 0;
+        }
+        .st-bs {
+            border-radius: 0;
+        }
+        .stButton > button {
+            border-radius: 0;
+            border: 1px solid #c2d9ff;
+        }
+        .st-dr {
+            border: 1px solid #fff;
+            border-radius: 0;
+        }
+        /* Fix for select dropdown arrow */
+        .st-d2 {
+            background-color: #fff !important;
+        }
+        .stDropdown > div > div > div {
+            border: black !important;
+        }
+        /* Plotly chart styles */
+        .js-plotly-plot .plotly {
+            border-radius: 0 !important;
+        }
+        /* New styles for dropdown hover and date input */
+        .stSelectbox > div > div > div:hover {
+            background-color: #c2d9ff;  /* Hover background color for dropdown */
+        }
+        .stDateInput > div > div > div > input {
+            border: 1px solid black;  /* Black border for date input */
+            border-radius: 0;  /* Sharp corners for the date input */
+            background-color: #white;  /* Ensure background color is white */
+            color: black;  /* Text color black */
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+set_css()
+
+
+
+# Link to the landing page
+st.markdown("[Back to Defense Data Center](https://defense-data-center.webflow.io)", unsafe_allow_html=True)
+
+st.title('Prison Operations Snapshot')
+file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/master_dataframe_cleaned.csv'
 total_content = requests.get(file_path).content
 dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 
-users = {
-    "lance": "lance",
-    "user2": "password2",
-}
+response = requests.get(file_path)
+if response.ok:
+    csv_content = response.content
+    btn = st.download_button(
+        label="Download Complete DDC DataSet",
+        data=csv_content,
+        file_name="total_df.csv",
+        mime="text/csv"
+    )
+else:
+    st.error("Failed to download the dataset.")
 
-# Initialize session state for user authentication
-if 'authenticated' not in st.session_state:
-    st.session_state['authenticated'] = False
+user_input = st.text_input("Facility Specific Spreadsheet Generator - Enter Name of Facility:").upper()
+sanitized_view_name = re.sub(r'\W+', '_', user_input)
 
-# Function to verify login credentials
+if response.ok:
+    # Filter the DataFrame based on user input
+    csv_content = response.content
+    total_df = pd.read_csv(StringIO(csv_content.decode('utf-8')))
+    selected_data = total_df[total_df['title'] == user_input]
 
-
-def login(user, password):
-    if user in users and users[user] == password:
-        st.session_state['authenticated'] = True
-        st.success("Logged in successfully!")
-    else:
-        st.error("Incorrect username or password")
-
-
-# Login form for unauthenticated users
-if not st.session_state['authenticated']:
-    st.title("Login Page")
-    user = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        login(user, password)
-
-# Content for authenticated users
-if st.session_state['authenticated']:
-    st.title("Secure Data Page")
-    st.write("Welcome! You can now download the data.")
-
-    response = requests.get(file_path)
-    if response.ok:
-        csv_content = response.content
-        btn = st.download_button(
-            label="Download Full DataSet",
-            data=csv_content,
-            file_name="total_df.csv",
+    if not selected_data.empty:
+        btn_facility = st.download_button(
+            label=f"Download {user_input} Data",
+            data=selected_data.to_csv(index=False).encode(),
+            file_name=f"{sanitized_view_name}_data.csv",
             mime="text/csv"
         )
     else:
-        st.error("Failed to download the dataset.")
+        if user_input:  # Only show the warning if the user has actually input something
+            st.warning(
+                "The specified facility name does not exist in the dataset. Please try again.")
+else:
+    st.error("Failed to load the dataset.")
 
-    # file_path_small = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/'
-    user_input = st.text_input("Enter Name of Facility").upper()
-    sanitized_view_name = re.sub(r'\W+', '_', user_input)
-
-    # Try to fetch the file to see if it exists
-    if response.ok:
-        # Filter the DataFrame based on user input
-        csv_content = response.content
-        total_df = pd.read_csv(StringIO(csv_content.decode('utf-8')))
-        selected_data = total_df[total_df['title'] == user_input]
-
-        if not selected_data.empty:
-            btn_facility = st.download_button(
-                label=f"Download {user_input} Data",
-                data=selected_data.to_csv(index=False).encode(),
-                file_name=f"{sanitized_view_name}_data.csv",
-                mime="text/csv"
-            )
-        else:
-            if user_input:  # Only show the warning if the user has actually input something
-                st.warning(
-                    "The specified facility name does not exist in the dataset. Please try again.")
-    else:
-        st.error("Failed to load the dataset.")
+# Suspension Analysis Section
+st.header('Operations Analysis')
+facility_name = st.selectbox(
+    'Choose a Facility for Analysis',
+    dataframe['title'].unique(),  
+    key='facility_name_for_analysis'
+)
+input_date = st.date_input(
+    "My Client Has Been Incarcerated Since:",
+    min_value=datetime(2023, 1, 1),  
+    max_value=datetime.today(),
+    key='analysis_date'
+)
+# Button to perform the analysis
+if st.button('Analyze Suspension Rates'):
+    # Convert the selected date to string and then to datetime to match DataFrame formatting
+    input_date_str = input_date.strftime('%Y-%m-%d')
+    suspension_percentage = suspension_count(dataframe, facility_name, input_date_str)
+    st.write(f"Percentage of days with suspended visitation after {input_date_str}: {suspension_percentage:.2f}%")
 
 # Visualization accessible to all users
 # options = ['FMC_FORT_WORTH','FCI_BECKLEY','USP_YAZOO_CITY','FCI_BIG_SPRING','FCI_HAZELTON','FMC_DEVENS','FCI_SANDSTONE','FCI_PEKIN','FCI_YAZOO_CITY_LOW',
@@ -105,10 +192,10 @@ if st.session_state['authenticated']:
 #  'USP_POLLOCK','USP_CANAAN','USP_THOMSON','FDC_HONOLULU','USP_ATLANTA','FDC_MIAMI','FCI_RAY_BROOK','FCI_LORETTO']
 
 
-facility_name = st.selectbox(
-    'Select Facility',
-    dataframe['title'].unique(),
-    placeholder="Choose an option")
+# facility_name = st.selectbox(
+#     'Select Facility for Analysis',
+#     dataframe['title'].unique(),
+#     placeholder="Choose an option")
 
 
 # facility_name = st.selectbox("Choose a Facility", options, index=0, placeholder="Choose an option")
@@ -170,7 +257,7 @@ if facility_name:
                     mode='lines',
                     name='Population',
                     line=dict(
-                        color='blue')))
+                        color='#000552')))
 
             # Add markers for points where the status is 'Suspended'
             suspended_data = data_df[data_df['visiting_status'] == 'Suspended']
@@ -179,9 +266,9 @@ if facility_name:
                     x=suspended_data['datetime_of_data'],
                     y=suspended_data['population'],
                     mode='markers',
-                    name='Suspended',
+                    name='Visitation Suspended',
                     marker=dict(
-                        color='red',
+                        color='#6e0004',
                         size=10)))
 
             # Update layout for better axis fit and to add title
@@ -189,10 +276,12 @@ if facility_name:
             population_max = data_df['population'].max()
             padding = (population_max - population_min) * 0.1  # 10% padding
             fig.update_layout(
-                title=f"Data Visualization for: {facility_name}",
+                title=f"Historical Population: {facility_name}",
                 yaxis=dict(range=[population_min - padding,
                            population_max + padding]),
-                transition_duration=500
+                transition_duration=500,
+                xaxis_title='Past Date',
+                yaxis_title = 'Population'
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -214,7 +303,7 @@ if facility_name:
         fig = go.Figure()
         # Add the predicted values and confidence intervals to the figure
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='Predicted',
-                                line=dict(color='blue')))
+                                line=dict(color='#001942')))
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_lower'], mode='lines', name='Lower Bound',
                                 fill=None, line=dict(color='lightblue')))
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
@@ -223,7 +312,7 @@ if facility_name:
                                for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
                                    text=marker_hover_text, hoverinfo='text', 
-                               marker=dict(color='red', size=10)))
+                               marker=dict(color='#6b0207', size=10)))
         
         # Set x-axis range to focus on the last 7 days
         fig.update_xaxes(tick0=None) # Start ticks from the first data point)
@@ -233,38 +322,6 @@ if facility_name:
                         showlegend=True)
     
         st.plotly_chart(fig, use_container_width=True)
-
-    
-        #aggregated stats plot added below
-        
-        avg_population_by_prison = dataframe.groupby('title')['population'].mean().reset_index()
-        recent_index = dataframe.groupby('title')['datetime_of_data'].idxmax()
-        most_recent_data = dataframe.loc[recent_index]
-        merged_df = avg_population_by_prison.join(most_recent_data.set_index('title'), on='title', rsuffix='_recent')
-        merged_df = merged_df.rename(columns={'population': 'avg_population'})
-        # Load the CSV file containing the average population and current population data
-        
-        # Extract relevant columns and filter data based on the selected facility
-        avg_pop_filtered = merged_df[['title', 'avg_population', 'population_recent']]
-        avg_pop_filtered = avg_pop_filtered[avg_pop_filtered['title'] == facility_name]
-        
-        # Check if data is available for the selected facility
-        if not avg_pop_filtered.empty:
-            # Create a bar plot for average population and current population
-            fig_bar = go.Figure()
-            fig_bar.add_trace(go.Bar(x=['Average Population', 'Current Population'],
-                                     y=[avg_pop_filtered['avg_population'].iloc[0], avg_pop_filtered['population_recent'].iloc[0]],
-                                     marker_color=['blue', 'lightblue'],
-                                     text=[f"Average: {avg_pop_filtered['avg_population'].iloc[0]}",
-                                           f"Current: {avg_pop_filtered['population_recent'].iloc[0]}"],
-                                     textposition='auto'
-                                     ))
-            fig_bar.update_layout(title=f"Average and Current Population for {facility_name}",
-                                  xaxis_title='Population Type',
-                                  yaxis_title='Population',
-                                  showlegend=False)
-            
-            st.plotly_chart(fig_bar, use_container_width=True)
 
     except FileNotFoundError:
         st.error(f"Data file for {facility_name} not found.")
@@ -290,7 +347,7 @@ for index, row in new_df.iterrows():
     # Sanitize the name from the DataFrame for comparison
     sanitized_name = sanitize_name(row['name'])
 
-    color = 'red' if sanitized_name == selected_facility else 'blue'
+    color = 'red' if sanitized_name == selected_facility else '#001942'
     fig.add_trace(go.Scattermapbox(
         lon=[row['long']],
         lat=[row['lat']],
@@ -298,7 +355,53 @@ for index, row in new_df.iterrows():
         marker=go.scattermapbox.Marker(
             size=9,
             color=color,
-            opacity=1 if color == 'blue' else 0.9
+            opacity=1 if color == '#001942' else 0.9
+        ),
+        text=row['name'],  # Original name for display
+        hoverinfo='text+name',
+        # hovertext="<b style='color:white;'>" + row['name'] + "</b>",  #
+        # Attempt to make hover text white
+        name=row['name']
+    ))
+mapbox_access_token = 'pk.eyJ1IjoibGtzYW50ZXJyZSIsImEiOiJjbHMwdWZwaGswNHZwMmtucTZvdXQ0dmQ4In0.atoTB2hBdxOrfAszlnLEfg'
+
+# Set mapbox and layout attributes
+fig.update_layout(
+    mapbox=dict(
+        accesstoken=mapbox_access_token,
+        zoom=3,
+        center=dict(lat=37.0902, lon=-95.7129),
+        style='streets'
+    ),
+    showlegend=False,
+    title='Interactive Map of Locations',
+    hoverlabel=dict(
+        bgcolor="black",  # Background color for hover
+        font_color="white",  # Font color for hover text
+        font_size=12,
+        font_family="Arial"
+    )
+)
+
+new_df = pd.read_csv(
+    'https://raw.githubusercontent.com/lksanterre/prison/main/facilities/location_data.csv')
+
+fig = go.Figure()
+
+selected_facility = sanitize_name(facility_name)
+for index, row in new_df.iterrows():
+    # Sanitize the name from the DataFrame for comparison
+    sanitized_name = sanitize_name(row['name'])
+
+    color = '#6b0207' if sanitized_name == selected_facility else '#001942'
+    fig.add_trace(go.Scattermapbox(
+        lon=[row['long']],
+        lat=[row['lat']],
+        mode='markers+text',  # For adding text labels beside markers
+        marker=go.scattermapbox.Marker(
+            size=9,
+            color=color,
+            opacity=1 if color == '#001942' else 0.9
         ),
         text=row['name'],  # Original name for display
         hoverinfo='text+name',
