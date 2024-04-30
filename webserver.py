@@ -117,7 +117,7 @@ set_css()
 st.markdown("[Back to Defense Data Center](https://defense-data-center.webflow.io)", unsafe_allow_html=True)
 
 st.title('Prison Operations Snapshot')
-file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/master_dataframe_cleaned.csv'
+file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/data_update/master_dataframe_cleaned.csv'
 total_content = requests.get(file_path).content
 dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 
