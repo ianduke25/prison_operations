@@ -12,6 +12,7 @@ from dateutil import parser
 import matplotlib.pyplot as plt
 import warnings
 from datetime import datetime
+from datetime import timedelta
 warnings.filterwarnings("ignore")
 
 ###STEP ONE: DEFINE FUNCTIONS###
@@ -294,40 +295,47 @@ if facility_name:
 
         m = Prophet()
         m.fit(train)
-        future = m.make_future_dataframe(periods=7)
+        future = m.make_future_dataframe(periods=8)
         forecast = m.predict(future).tail(7)
         # forecast_last_7_days = forecast.tail(7)
         ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/data_update/forecast.csv').content
         ml_pred = pd.read_csv(StringIO(ml_content.decode('utf-8')))
+        # Filter predictions for the selected facility
+        ml_pred_facility = ml_pred[ml_pred['title'] == facility_name]
         
         
-        st.dataframe(ml_pred)  # This line displays the DataFrame in the Streamlit app
+        #st.dataframe(ml_pred_facility)  # This line displays the DataFrame in the Streamlit app
 
+        # Adjusting the 'ds' column to show the day before
+        forecast['ds'] = forecast['ds'] - timedelta(days=1)
 
-        # Create a Plotly figure
+        # Continue with your existing code, now using the adjusted 'ds' for plotting
         fig = go.Figure()
-        # Add the predicted values and confidence intervals to the figure
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='lines', name='Predicted',
                                 line=dict(color='#001942')))
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_lower'], mode='lines', name='Lower Bound',
                                 fill=None, line=dict(color='lightblue')))
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
                                 fill='tonexty', line=dict(color='lightblue')))
-        # Add text triggered by cursor hover: predicted pop and lockdown probability
-        marker_hover_text = [f"Population: {yhat:.0f}, Lockdown Probability: {lockdown_prob:.2f}" 
-                               for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
-        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
-                                   text=marker_hover_text, hoverinfo='text', 
-                               marker=dict(color='#6b0207', size=10)))
 
-        # Set x-axis range to focus on the last 7 days
-        fig.update_xaxes(tick0=None) # Start ticks from the first data point)
-        # Update layout
+        # Reset the index after adjusting the dates
+        ml_pred_facility_reset = ml_pred_facility.reset_index()
+        forecast_reset = forecast.reset_index()
+
+        marker_hover_text = [f"Predicted Population: {yhat:.0f}, Lockdown Probability: {lockdown_prob * 100:.0f}%" 
+                            for yhat, lockdown_prob in zip(forecast_reset['yhat'], ml_pred_facility_reset['lockdown_probability'])]
+
+        fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
+                                text=marker_hover_text, hoverinfo='text', 
+                                marker=dict(color='#6b0207', size=10)))
+
+        # Update layout as per the original settings
         fig.update_layout(title='Next 7 Days Predictions',
                         xaxis_title='Date', yaxis_title='Population Prediction',
                         showlegend=True)
-    
+
         st.plotly_chart(fig, use_container_width=True)
+
         
 
     except FileNotFoundError:
