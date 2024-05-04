@@ -1,3 +1,4 @@
+# Import packages
 from prophet.plot import plot_plotly, plot_components_plotly
 import os
 import re
@@ -13,15 +14,55 @@ import warnings
 from datetime import datetime
 warnings.filterwarnings("ignore")
 
-# Define the function to analyze suspension rates
+###STEP ONE: DEFINE FUNCTIONS###
+
+# Funciton: Analyze suspension rates
 def suspension_count(data, facility, before):
     filtered_df = data[data['datetime_of_data'] >= before]
     filtered_df = filtered_df[filtered_df['title'] == facility]
     suspended = filtered_df[filtered_df['visiting_status'] == 'Suspended']
+    not_suspended = filtered_df[filtered_df['visiting_status'] == 'Not Suspended']
     count = len(suspended)
-    total = len(filtered_df)
+    total = len(suspended) + len(not_suspended)
     return (count / total) * 100 if total > 0 else 0
 
+# Function: Preprocess data for timeseries modeling (Prophet)
+
+def prophet_preprocess_fac(df):
+    df['datetime_of_data'] = df['datetime_of_data'].apply(
+        lambda x: parser.parse(x))
+    df['ds'] = pd.to_datetime(df['datetime_of_data'],
+                              format='%Y-%m-%d %H:%M:%S %Z')
+    df['ds'] = df['ds'].dt.tz_localize(None)
+    df['y'] = df["population"]
+    df.set_index('ds', inplace=True)
+
+    daily_data = df.copy()
+    daily_data = daily_data['y']
+    # fill missing days with median rolling window = 5
+    rolling_median = daily_data.rolling(
+        window=5, min_periods=1, center=True).median()
+    daily_data_filled = daily_data.fillna(rolling_median)
+    # Remove timezone from the 'Datetime' index
+    daily_data_filled.index = daily_data_filled.index.tz_localize(None)
+
+    # Reset the index to make the Datetime a regular column
+    df_reset = daily_data_filled.reset_index()
+    # Isolate time and predictor columns
+    df_reset = df_reset[['ds', 'y']]
+
+    return df_reset
+
+# Function: Preprocess prison names
+def sanitize_name(name):
+    """Sanitize names for consistent comparison."""
+    # Convert to lower case, strip whitespace, and replace special characters if needed
+    # Adjust this based on your specific needs
+    sanitized = name.lower().strip().replace(' ', '_')
+    return sanitized
+
+
+###STEP TWO: DEFINE GUI INTERFACE TO MATCH THE LANDING PAGE###
 def set_css():
     st.markdown("""
         <style>
@@ -111,16 +152,21 @@ def set_css():
 
 set_css()
 
-
-
-# Link to the landing page
+# Top of application: Link back to landing page
 st.markdown("[Back to Defense Data Center](https://defense-data-center.webflow.io)", unsafe_allow_html=True)
 
+# Display title
 st.title('Prison Operations Snapshot')
-file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/clean_data/master_dataframe_cleaned.csv'
+
+# Define data input
+file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/data_update/master_dataframe_cleaned.csv'
 total_content = requests.get(file_path).content
 dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 
+###STEP THREE: START BUILDING STREAMLIT APP##
+###BEGIN BY DEFINING BUTTONS###
+
+# Create Button 1: Complete DDC Dataset Download
 response = requests.get(file_path)
 if response.ok:
     csv_content = response.content
@@ -133,6 +179,7 @@ if response.ok:
 else:
     st.error("Failed to download the dataset.")
 
+# Create Button 2: Facility-Specific Dataset Download
 user_input = st.text_input("Facility Specific Spreadsheet Generator - Enter Name of Facility:").upper()
 sanitized_view_name = re.sub(r'\W+', '_', user_input)
 
@@ -169,76 +216,29 @@ input_date = st.date_input(
     max_value=datetime.today(),
     key='analysis_date'
 )
-# Button to perform the analysis
+# Button 3: Suspension Analysis
 if st.button('Analyze Suspension Rates'):
     # Convert the selected date to string and then to datetime to match DataFrame formatting
     input_date_str = input_date.strftime('%Y-%m-%d')
     suspension_percentage = suspension_count(dataframe, facility_name, input_date_str)
     st.write(f"Percentage of days with suspended visitation after {input_date_str}: {suspension_percentage:.2f}%")
 
-# Visualization accessible to all users
-# options = ['FMC_FORT_WORTH','FCI_BECKLEY','USP_YAZOO_CITY','FCI_BIG_SPRING','FCI_HAZELTON','FMC_DEVENS','FCI_SANDSTONE','FCI_PEKIN','FCI_YAZOO_CITY_LOW',
-#  'FCI_YAZOO_CITY_MEDIUM','USP_COLEMAN_I','FCI_SAFFORD','FCI_MCKEAN','MCC_NEW_YORK','FCI_TERRE_HAUTE','FCI_THREE_RIVERS','USP_BEAUMONT','FCI_OAKDALE_II',
-#  'USP_BIG_SANDY','FCI_BUTNER_LOW','FCI_DUBLIN','FCI_OXFORD','FCI_BEAUMONT_LOW','USP_ATWATER','MCC_SAN_DIEGO','FCI_VICTORVILLE_MEDIUM_II','FCI_TALLAHASSEE',
-#  'FCI_ALLENWOOD_LOW','FCI_DANBURY','FCI_LOMPOC','FDC_SEATAC','USP_LEAVENWORTH','MDC_GUAYNABO','FCI_GILMER','USP_HAZELTON','FCI_MANCHESTER','FCI_OTISVILLE',
-#  'FCI_PETERSBURG_LOW','FPC_DULUTH','FCI_PETERSBURG_MEDIUM','FCI_MORGANTOWN','FPC_PENSACOLA','FCI_SEAGOVILLE','FCI_ALICEVILLE','FCI_PHOENIX','FCI_ENGLEWOOD',
-# 'FCI_FORREST_CITY_MEDIUM','FCI_MENDOTA','FCI_BUTNER_MEDIUM_II','FCI_BUTNER_MEDIUM_I','FCI_BEAUMONT_MEDIUM','MCC_CHICAGO','FCI_COLEMAN_LOW','FCI_LA_TUNA',
-#  'USP_COLEMAN_II','FCI_TALLADEGA','FCI_SCHUYLKILL','USP_LOMPOC','FCI_THOMSON','FCI_BERLIN','FCI_POLLOCK','FCI_WASECA','USP_LEE','FMC_ROCHESTER','FCI_BASTROP',
-#  'USP_MARION','FPC_MONTGOMERY','MDC_LOS_ANGELES','FCI_OAKDALE_I','FCI_ASHLAND','FCI_FORREST_CITY_LOW','MCFP_SPRINGFIELD','FCI_ALLENWOOD_MEDIUM','USP_TERRE_HAUTE',
-#  'FCI_JESUP','FCI_MARIANNA','FCI_ESTILL','USP_MCCREARY','FCI_BENNETTSVILLE','FCI_MCDOWELL','FCI_VICTORVILLE_MEDIUM_I','FCI_FLORENCE','FCI_ELKTON','FCI_FORT_DIX',
-#  'FCI_TERMINAL_ISLAND','FCI_WILLIAMSBURG','FCI_EDGEFIELD','FCI_TUCSON','FTC_OKLAHOMA_CITY','FMC_LEXINGTON','FCI_MIAMI','USP_LEWISBURG','FCI_EL_RENO','FMC_BUTNER',
-# 'USP_VICTORVILLE','FCI_SHERIDAN','FCI_FAIRTON','FCI_GREENVILLE','FPC_YANKTON','FCI_MEMPHIS','FCI_HERLONG','FPC_ALDERSON','FDC_HOUSTON','FMC_CARSWELL','FCI_CUMBERLAND',
-# 'USP_FLORENCE_HIGH','FDC_PHILADELPHIA','USP_TUCSON','FCI_MILAN','FCI_TEXARKANA','FCI_COLEMAN_MEDIUM','USP_ALLENWOOD','MDC_BROOKLYN','USP_FLORENCE_ADMAX','FPC_BRYAN',
-#  'USP_POLLOCK','USP_CANAAN','USP_THOMSON','FDC_HONOLULU','USP_ATLANTA','FDC_MIAMI','FCI_RAY_BROOK','FCI_LORETTO']
-
-
-# facility_name = st.selectbox(
-#     'Select Facility for Analysis',
-#     dataframe['title'].unique(),
-#     placeholder="Choose an option")
-
-
-# facility_name = st.selectbox("Choose a Facility", options, index=0, placeholder="Choose an option")
-
-
-def prophet_preprocess_fac(df):
-    df['datetime_of_data'] = df['datetime_of_data'].apply(
-        lambda x: parser.parse(x))
-    df['ds'] = pd.to_datetime(df['datetime_of_data'],
-                              format='%Y-%m-%d %H:%M:%S %Z')
-    df['ds'] = df['ds'].dt.tz_localize(None)
-    df['y'] = df["population"]
-    df.set_index('ds', inplace=True)
-
-    daily_data = df.copy()
-    daily_data = daily_data['y']
-    # fill missing days with median rolling window = 5
-    rolling_median = daily_data.rolling(
-        window=5, min_periods=1, center=True).median()
-    daily_data_filled = daily_data.fillna(rolling_median)
-    # Remove timezone from the 'Datetime' index
-    daily_data_filled.index = daily_data_filled.index.tz_localize(None)
-
-    # Reset the index to make the Datetime a regular column
-    df_reset = daily_data_filled.reset_index()
-    # Isolate time and predictor columns
-    df_reset = df_reset[['ds', 'y']]
-
-    return df_reset
-
-# ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/forecast/forecast_test.csv').content
-# ml_df = pd.read_csv(StringIO(ml_content.decode('utf-8')))
+### STEP FOUR: DISPLAY HISTORICAL DATA PLOT AND PREDICTIONS ###
 
 
 if facility_name:
-
     try:
-        # Loading the data into a DataFrame
+        # Load the data into a DataFrame
         data_df = dataframe[dataframe['title'] == facility_name]
-        # ml_pred = ml_df[ml_df['title'] == facility_name]
+
+        data_df['population'] = data_df['population'].astype(str)
+        
+        data_df['population'] = data_df['population'].str.replace(',', '')
+
+        data_df['population'] = data_df['population'].astype(int)
+
         train = prophet_preprocess_fac(data_df)
-        # Convert the 'datetime_of_data' column to datetime type for proper
-        # sorting
+        # Convert the 'datetime_of_data' column to datetime type for proper sorting
         if 'datetime_of_data' in data_df.columns and 'visiting_status' in data_df.columns:
             data_df['datetime_of_data'] = data_df['datetime_of_data'].astype(
                 str).str[:-4]
@@ -250,6 +250,7 @@ if facility_name:
             fig = go.Figure()
 
             # Add line for population
+
             fig.add_trace(
                 go.Scatter(
                     x=data_df['datetime_of_data'],
@@ -272,6 +273,7 @@ if facility_name:
                         size=10)))
 
             # Update layout for better axis fit and to add title
+            data_df['population'] = pd.to_numeric(data_df['population'], errors='coerce')
             population_min = data_df['population'].min()
             population_max = data_df['population'].max()
             padding = (population_max - population_min) * 0.1  # 10% padding
@@ -287,16 +289,15 @@ if facility_name:
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.error("Required columns not found in the data.")
-
-        # time-series model
+        
+        # Plot timeseries model
 
         m = Prophet()
         m.fit(train)
         future = m.make_future_dataframe(periods=7)
         forecast = m.predict(future).tail(7)
         # forecast_last_7_days = forecast.tail(7)
-        ml_content = requests.get(
-            'https://raw.githubusercontent.com/lksanterre/prison/main/data_update/forecast.csv').content
+        ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/data_update/forecast.csv').content
         ml_pred = pd.read_csv(StringIO(ml_content.decode('utf-8')))
 
         # Create a Plotly figure
@@ -308,6 +309,7 @@ if facility_name:
                                 fill=None, line=dict(color='lightblue')))
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat_upper'], mode='lines', name='Upper Bound',
                                 fill='tonexty', line=dict(color='lightblue')))
+        # Add text triggered by cursor hover: predicted pop and lockdown probability
         marker_hover_text = [f"Population: {yhat:.0f}, Lockdown Probability: {lockdown_prob:.2f}" 
                                for yhat, lockdown_prob in zip(forecast['yhat'], ml_pred['lockdown_probability'])]
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
@@ -328,15 +330,7 @@ if facility_name:
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
 
-
-def sanitize_name(name):
-    """Sanitize names for consistent comparison."""
-    # Convert to lower case, strip whitespace, and replace special characters if needed
-    # Adjust this based on your specific needs
-    sanitized = name.lower().strip().replace(' ', '_')
-    return sanitized
-
-
+### STEP FIVE: Display BOP Facilities on Interactive Map ###
 new_df = pd.read_csv(
     'https://raw.githubusercontent.com/lksanterre/prison/main/facilities/location_data.csv')
 
