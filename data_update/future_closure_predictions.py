@@ -120,7 +120,7 @@ for facility in facility_names:
 
     m = Prophet()
     m.fit(train)
-    future = m.make_future_dataframe(periods=9)
+    future = m.make_future_dataframe(periods=8)
     forecast = m.predict(future)
     new_columns = forecast[['ds', 'yhat']]
     current_datetime = datetime.now()
