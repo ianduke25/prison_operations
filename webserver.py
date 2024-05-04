@@ -299,6 +299,10 @@ if facility_name:
         # forecast_last_7_days = forecast.tail(7)
         ml_content = requests.get('https://raw.githubusercontent.com/lksanterre/prison/main/data_update/forecast.csv').content
         ml_pred = pd.read_csv(StringIO(ml_content.decode('utf-8')))
+        
+        
+        st.dataframe(ml_pred)  # This line displays the DataFrame in the Streamlit app
+
 
         # Create a Plotly figure
         fig = go.Figure()
@@ -315,7 +319,7 @@ if facility_name:
         fig.add_trace(go.Scatter(x=forecast['ds'], y=forecast['yhat'], mode='markers', name='Lockdown Probability',
                                    text=marker_hover_text, hoverinfo='text', 
                                marker=dict(color='#6b0207', size=10)))
-        
+
         # Set x-axis range to focus on the last 7 days
         fig.update_xaxes(tick0=None) # Start ticks from the first data point)
         # Update layout
@@ -324,6 +328,7 @@ if facility_name:
                         showlegend=True)
     
         st.plotly_chart(fig, use_container_width=True)
+        
 
     except FileNotFoundError:
         st.error(f"Data file for {facility_name} not found.")
