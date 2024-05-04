@@ -53,95 +53,103 @@ data['zip_code'] = data['full_address'].apply(lambda x: x[-5:])
 # Remove specific facilities if required
 data = data[data['title'] != 'MCC New York']
 
+# Remove unnecessary columns 
+data = data.loc[:, ~data.columns.str.startswith('Unnamed')]
+
+
 ### STEP TWO: CREATE FUTURE DATAFRAME WITH MODEL FEATURES###
-# Function Definitions
-def prophet_preprocess_fac(df):
-    df['datetime_of_data'] = df['datetime_of_data'].apply(lambda x: parser.parse(x))
-    df['ds'] = pd.to_datetime(df['datetime_of_data'])
-    df['y'] = df["population"]
-    df.set_index('ds', inplace=True)
 
-    daily_data = df['y']
-    rolling_median = daily_data.rolling(window=5, min_periods=1, center=True).median()
-    daily_data_filled = daily_data.fillna(rolling_median)
-    daily_data_filled.index = daily_data_filled.index.tz_localize(None)
-    df_reset = daily_data_filled.reset_index()
-    df_reset = df_reset[['ds', 'y']]
-    return df_reset
+# Add future political affiliation
 
-def get_future_weather(future_date, location):
-    today = datetime.now().date()
-    future_datetime = datetime.strptime(future_date, '%Y-%m-%d %H:%M:%S')
-    future_date = future_datetime.date()
-    delta = (future_date - today).days
+# def prophet_preprocess_fac(df):
+#     df['datetime_of_data'] = df['datetime_of_data'].apply(lambda x: parser.parse(x))
+#     df['ds'] = pd.to_datetime(df['datetime_of_data'])
+#     df['y'] = df["population"]
+#     df.set_index('ds', inplace=True)
 
-    default_temp = 60  # Default temperature
-    default_precip = 0  # Default precipitation
+#     daily_data = df['y']
+#     rolling_median = daily_data.rolling(window=5, min_periods=1, center=True).median()
+#     daily_data_filled = daily_data.fillna(rolling_median)
+#     daily_data_filled.index = daily_data_filled.index.tz_localize(None)
+#     df_reset = daily_data_filled.reset_index()
+#     df_reset = df_reset[['ds', 'y']]
+#     return df_reset
 
-    if 0 <= delta <= 10:
-        full_url = f"http://api.weatherapi.com/v1/forecast.json?key={api_key}&q={location}&days=10"
-        response = requests.get(full_url)
-        if response.status_code == 200:
-            data = response.json()
-            for forecast in data['forecast']['forecastday']:
-                if forecast['date'] == future_date.strftime('%Y-%m-%d'):
-                    avgtemp_f = forecast.get('day', {}).get('avgtemp_f', default_temp)
-                    totalprecip_mm = forecast.get('day', {}).get('totalprecip_mm', default_precip)
-                    return avgtemp_f, totalprecip_mm
+# def get_future_weather(future_date, location):
+#     today = datetime.now().date()
+#     future_datetime = datetime.strptime(future_date, '%Y-%m-%d %H:%M:%S')
+#     future_date = future_datetime.date()
+#     delta = (future_date - today).days
 
-    # Return default values if no data is found or API call is not successful
-    return default_temp, default_precip
+#     default_temp = 60  # Default temperature
+#     default_precip = 0  # Default precipitation
 
-def load_model_and_return_probabilities(new_data):
-    with open(model_pickle, 'rb') as file:
-        loaded_model = pickle.load(file)
-    decision_scores = loaded_model.decision_function(new_data)
-    probabilities = expit(decision_scores)
-    return probabilities
+#     if 0 <= delta <= 10:
+#         full_url = f"http://api.weatherapi.com/v1/forecast.json?key={api_key}&q={location}&days=10"
+#         response = requests.get(full_url)
+#         if response.status_code == 200:
+#             data = response.json()
+#             for forecast in data['forecast']['forecastday']:
+#                 if forecast['date'] == future_date.strftime('%Y-%m-%d'):
+#                     avgtemp_f = forecast.get('day', {}).get('avgtemp_f', default_temp)
+#                     totalprecip_mm = forecast.get('day', {}).get('totalprecip_mm', default_precip)
+#                     return avgtemp_f, totalprecip_mm
 
-# Load and Process Data
-facility_names = data['title'].unique()
-master_df = pd.DataFrame()
+#     # Return default values if no data is found or API call is not successful
+#     return default_temp, default_precip
 
-for facility in facility_names:
-    print(f"Processing forecast for {facility}")
-    data_df = data[data['title'] == facility]
-    train = prophet_preprocess_fac(data_df)
-    if len(train) < 2:
-        print(f"Not enough data to fit the model for {facility}.")
-        continue
+# def load_model_and_return_probabilities(new_data):
+#     with open(model_pickle, 'rb') as file:
+#         loaded_model = pickle.load(file)
+#     decision_scores = loaded_model.decision_function(new_data)
+#     probabilities = expit(decision_scores)
+#     return probabilities
 
-    m = Prophet()
-    m.fit(train)
-    future = m.make_future_dataframe(periods=9)
-    forecast = m.predict(future)
-    new_columns = forecast[['ds', 'yhat']]
-    current_datetime = datetime.now()
-    future_dates_data = new_columns[new_columns['ds'] > current_datetime]
-    future_dates_data = future_dates_data[1:]  # Skip the first row (last known data)
-    future_dates_data['title'] = facility
-    zip_code = data_df['zip_code'].dropna().iloc[0] if not data_df['zip_code'].isnull().all() else 'Unknown'
-    future_dates_data['zip'] = zip_code
+# # Load and Process Data
+# facility_names = data['title'].unique()
+# master_df = pd.DataFrame()
 
-    for i, row in future_dates_data.iterrows():
-        avgtemp_f, totalprecip_mm = get_future_weather(str(row['ds']), row['zip'])
-        future_dates_data.at[i, 'avgtemp_f'] = avgtemp_f
-        future_dates_data.at[i, 'totalprecip_mm'] = totalprecip_mm
+# for facility in facility_names:
+#     print(f"Processing forecast for {facility}")
+#     data_df = data[data['title'] == facility]
+#     train = prophet_preprocess_fac(data_df)
+#     if len(train) < 2:
+#         print(f"Not enough data to fit the model for {facility}.")
+#         continue
 
-    master_df = pd.concat([master_df, future_dates_data], ignore_index=True)
+#     m = Prophet()
+#     m.fit(train)
+#     future = m.make_future_dataframe(periods=9)
+#     forecast = m.predict(future)
+#     new_columns = forecast[['ds', 'yhat']]
+#     current_datetime = datetime.now()
+#     future_dates_data = new_columns[new_columns['ds'] > current_datetime]
+#     future_dates_data = future_dates_data[1:]  # Skip the first row (last known data)
+#     future_dates_data['title'] = facility
+#     zip_code = data_df['zip_code'].dropna().iloc[0] if not data_df['zip_code'].isnull().all() else 'Unknown'
+#     future_dates_data['zip'] = zip_code
 
-master_df.set_index('ds', inplace=True)
-master_df_pred = master_df[['avgtemp_f', 'totalprecip_mm', 'yhat']]
-master_df_pred.rename(columns={'avgtemp_f': 'daily_temperature', 'totalprecip_mm': 'daily_precipitation', 'yhat':'population'}, inplace=True)
+#     for i, row in future_dates_data.iterrows():
+#         avgtemp_f, totalprecip_mm = get_future_weather(str(row['ds']), row['zip'])
+#         future_dates_data.at[i, 'avgtemp_f'] = avgtemp_f
+#         future_dates_data.at[i, 'totalprecip_mm'] = totalprecip_mm
 
-### STEP THREE: USE FUTURE DATAFRAME TO MAKE PREDICTIONS ###
-scaler = StandardScaler()
-x_pred_sc_array = scaler.fit_transform(master_df_pred)
-x_pred_sc = pd.DataFrame(x_pred_sc_array, columns=master_df_pred.columns)
-predictions = load_model_and_return_probabilities(x_pred_sc)
-master_df['lockdown_probability'] = predictions
+#     master_df = pd.concat([master_df, future_dates_data], ignore_index=True)
 
-# Save to CSV
-master_df.to_csv(output_path)
+# master_df.set_index('ds', inplace=True)
+# master_df_pred = master_df[['avgtemp_f', 'totalprecip_mm', 'yhat']]
+# master_df_pred.rename(columns={'avgtemp_f': 'daily_temperature', 'totalprecip_mm': 'daily_precipitation', 'yhat':'population'}, inplace=True)
 
-print("Processing complete. Results saved to:", output_path)
+# ### STEP THREE: USE FUTURE DATAFRAME TO MAKE PREDICTIONS ###
+# scaler = StandardScaler()
+# x_pred_sc_array = scaler.fit_transform(master_df_pred)
+# x_pred_sc = pd.DataFrame(x_pred_sc_array, columns=master_df_pred.columns)
+# predictions = load_model_and_return_probabilities(x_pred_sc)
+# master_df['lockdown_probability'] = predictions
+
+# # Save to CSV
+# master_df.to_csv(output_path)
+
+# print("Processing complete. Results saved to:", output_path)
+
+data.to_csv('TEST_APRIL.csv')
