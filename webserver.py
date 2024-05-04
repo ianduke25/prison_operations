@@ -148,6 +148,10 @@ def set_css():
             background-color: #white;  /* Ensure background color is white */
             color: black;  /* Text color black */
         }
+        .stSelectbox > div > div > div:hover {
+            background-color: #c2d9ff; 
+            color: black; 
+        }
         </style>
         """, unsafe_allow_html=True)
 
@@ -180,29 +184,39 @@ if response.ok:
 else:
     st.error("Failed to download the dataset.")
 
-# Create Button 2: Facility-Specific Dataset Download
-user_input = st.text_input("Facility Specific Spreadsheet Generator - Enter Name of Facility:").upper()
+# # Create Button 2: Facility-Specific Dataset Download
+# Extract unique facility names for the autocomplete feature
+facility_names = dataframe['title'].unique()
+
+# Implement an autocomplete feature using selectbox/multiselect
+user_input = st.selectbox("Facility Specific Spreadsheet Generator - Select Facility:", facility_names)
+
+# Sanitize the facility name
 sanitized_view_name = re.sub(r'\W+', '_', user_input)
 
-if response.ok:
-    # Filter the DataFrame based on user input
-    csv_content = response.content
-    total_df = pd.read_csv(StringIO(csv_content.decode('utf-8')))
-    selected_data = total_df[total_df['title'] == user_input]
+# Filter the DataFrame based on user input
+selected_data = dataframe[dataframe['title'] == user_input]
 
-    if not selected_data.empty:
-        btn_facility = st.download_button(
-            label=f"Download {user_input} Data",
-            data=selected_data.to_csv(index=False).encode(),
-            file_name=f"{sanitized_view_name}_data.csv",
-            mime="text/csv"
-        )
-    else:
-        if user_input:  # Only show the warning if the user has actually input something
-            st.warning(
-                "The specified facility name does not exist in the dataset. Please try again.")
+st.markdown("""
+    <style>
+    /* Adjust selectbox hover style */
+    .stSelectbox > div > div > div:hover {
+        background-color: #c2d9ff;  /* Light shade of blue for hover */
+        color: black;  /* Ensure text remains readable */
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+if not selected_data.empty:
+    # Create download button for the filtered data
+    st.download_button(
+        label=f"Download {user_input} Data",
+        data=selected_data.to_csv(index=False).encode(),
+        file_name=f"{sanitized_view_name}_data.csv",
+        mime="text/csv"
+    )
 else:
-    st.error("Failed to load the dataset.")
+    st.warning("The specified facility name does not exist in the dataset. Please try again.")
 
 # Suspension Analysis Section
 st.header('Operations Analysis')
