@@ -137,7 +137,7 @@ for facility in facility_names:
         future_dates_data.at[i, 'totalprecip_mm'] = totalprecip_mm
 
     master_df = pd.concat([master_df, future_dates_data], ignore_index=True)
-
+  
 master_df.set_index('ds', inplace=True)
 master_df_pred = master_df.copy()
 #master_df_pred = master_df[['address','avgtemp_f', 'totalprecip_mm', 'yhat']]
