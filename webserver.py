@@ -158,7 +158,7 @@ def set_css():
 set_css()
 
 # Top of application: Link back to landing page
-st.markdown("[Back to Defense Data Center](https://defense-data-center.webflow.io)", unsafe_allow_html=True)
+st.markdown("[Back to Justice Data Collaborative](https://justice-data-collaborative.webflow.io)", unsafe_allow_html=True)
 
 # Display title
 st.title('Prison Operations Snapshot')
