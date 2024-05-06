@@ -7,12 +7,6 @@ The Prison Operations Snapshot is a data management and visualization tool desig
 ## Hosting
 The Prison Operations Snapshot is a Streamlit application that is hosted on the Streamlit Community Cloud. Due to this setup, any changes made to the webserver.py file or related data in this repository will be directly reflected in the application. The application is refeshed based on the contents of this repository whenever the application is opened, refreshed, or a user interacts with a feature on the page.
 
-## Usage
-To start the Streamlit application and visualize the data:
-```
-streamlit run webserver.py
-```
-
 ## Functionality
 The first piece of functionality in our application is the ability to download the lockdown data for each prison individually as a CSV file. This allows users to manipulate the data themselves and get a look behind the scenes at what is powering our models. The second piece of our application is the ability to select a prison from a drop down list and see the percentage of time that the prison was locked down. This is a helpful feature for lawyers or defense workers who are trying to advocate on behalf of their clients to a judge. The next piece of our application is the implementation of machine learning and time series models. Upon selecting a prison from the drop down the time series model will run automatically to predict the prison population for the next 7 days. In addition, a random forest model is trained to predict the probability of the selected prison being locked down. This probability can be seen when hovering over the time series plot with the user's mouse. This functionality is helpful for any user who may be traveling to a prison and is planning their visit.
 
