@@ -18,7 +18,7 @@ The first piece of functionality in our application is the ability to download t
 
 ### Directory of components
 - **.streamlit**: Configuration file
-- **Data_Update**: Folder that encompases
+- **Data_Update**: Folder that encompases the following:
 
     1.) All data storage. Data stored here is read by the webserver.py file and displayed/utilized in the application
   
