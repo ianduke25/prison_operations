@@ -344,7 +344,7 @@ if facility_name:
                                 marker=dict(color='#6b0207', size=10)))
 
         # Update layout as per the original settings
-        fig.update_layout(title='Next 7 Days Predictions',
+        fig.update_layout(title='Predicted Future Population and Lockdown Status',
                         xaxis_title='Date', yaxis_title='Population Prediction',
                         showlegend=True)
 
