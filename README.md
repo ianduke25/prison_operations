@@ -1,11 +1,11 @@
 
-# Defense Data Center
+# Prison Operations Snapshot
 
 ## Description
-The Defense Data Center is a data management and visualization tool designed to store and process information about prison populations and facility lockdown statuses. This project includes a Streamlit application that provides real-time data visualizations and aggregation functionalities. It also features several Python scripts for data cleaning, along with a dedicated folder that automates this process using bash commands.
+The Prison Operations Snapshot is a data management and visualization tool designed to store and process information about prison populations and facility lockdown statuses. This project includes a Streamlit application that provides real-time data visualizations, aggregation functionalities, and future population + lockdown predictions. It also features several Python scripts for data cleaning, along with a dedicated folder that automates this process using bash commands.
 
 ## Installation Instructions
-To set up and run the Prison Entrepreneurship project, follow these steps:
+To set up and run the Prison Operations Snapshot, follow these steps:
 Setting this up 'Dont know if we need this'
 
 ## Usage
