@@ -16,7 +16,7 @@ streamlit run webserver.py
 ## Functionality
 The first piece of functionality in our application is the ability to download the lockdown data for each prison individually as a CSV file. This allows users to manipulate the data themselves and get a look behind the scenes at what is powering our models. The second piece of our application is the ability to select a prison from a drop down list and see the percentage of time that the prison was locked down. This is a helpful feature for lawyers or defense workers who are trying to advocate on behalf of their clients to a judge. The next piece of our application is the implementation of machine learning and time series models. Upon selecting a prison from the drop down the time series model will run automatically to predict the prison population for the next 7 days. In addition, a random forest model is trained to predict the probability of the selected prison being locked down. This probability can be seen when hovering over the time series plot with the user's mouse. This functionality is helpful for any user who may be traveling to a prison and is planning their visit.
 
-### Directory of components
+## Directory of components
 - **.streamlit**: Configuration file
 - **Data_Update**: Folder that encompases the following:
 
