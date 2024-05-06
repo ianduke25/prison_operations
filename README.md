@@ -29,7 +29,7 @@ The first piece of functionality in our application is the ability to download t
 - **facilties**: List of all facilties and their specific latitiude and longitude values.
 - **requirements.txt**: Required libraries and dependencies
 - **webserver.py**: The actual application source code. This file hosts the front end display as well as the intented functionality for the various application features.
-- **lcokdown_prediction_modeling**: Notebook for development of machine learning models to predict lockdowns.
+- **lcokdown_prediction_modeling.ipynb**: Notebook for development of machine learning models to predict lockdowns.
 
 ## Contributors
 We are a team of data scientests at the University of San Francisco. 
