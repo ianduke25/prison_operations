@@ -25,19 +25,19 @@ The first piece of functionality in our application is the ability to download t
 ### Directory
 - **.streamlit**: Configuration file
 - **Data_Update**: Folder that encompases
+
     1.) All data storage. Data stored here is read by the webserver.py file and displayed in the application
+  
     2.) Scraping of web data from the BOP sites. This data is required to be scraped daily because of our time series model.
+  
     3.) Automation of scraping scripts and organization of updated data in a bash script.
+  
 - **Facilties**: List of all facilties and their specific latitiude and longitude values.
 - **requirements.txt**: Required libraries and dependencies
 - **webserver.py**: The actual application source code. This file hosts the front end display as well as the intented functionality for the various application features.
 - **lcokdown_prediction_modeling**: Notebook for development of machine learning models to predict lockdowns.
-### Data Aggregation and Real-time Visualization:
-- Leveraging streamlit to help us aggeragte data based upon specific facilities.
 
-
-
-## Contributing
+## Contributors
 We are a team of data scientests at the University of San Francisco. 
 
 ## Application Access
