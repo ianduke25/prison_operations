@@ -20,11 +20,11 @@ The first piece of functionality in our application is the ability to download t
 - **.streamlit**: Configuration file
 - **Data_Update**: Folder that encompases the following:
 
-    1.) All data storage. Data stored here is read by the webserver.py file and displayed/utilized in the application
+    1.) All data storage. Data stored here is read by the webserver.py file and displayed/utilized in the application. The main data to be used in the application is stored in the mater_datafram_cleaned.csv file. Forecasted predictions are stored in the forecast.csv.
   
-    2.) Scraping of web data from the BOP sites. This data is required to be scraped daily because of our time series model.
+    2.) Scraping of web data from the BOP sites. This data is required to be scraped daily because of our time series model. Scraping is completed in the scrape_concatenate.py file. Modeling is completed in the future_closure_predictions.py file.
   
-    3.) Automation of scraping scripts and organization of updated data in a bash script.
+    3.) Automation of scraping scripts and organization of updated data in a bash script called data_update.sh.
   
 - **facilties**: List of all facilties and their specific latitiude and longitude values.
 - **requirements.txt**: Required libraries and dependencies
