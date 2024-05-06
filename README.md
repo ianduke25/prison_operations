@@ -4,9 +4,8 @@
 ## Description
 The Prison Operations Snapshot is a data management and visualization tool designed to store and process information about prison populations and facility lockdown statuses. This project includes a Streamlit application that provides real-time data visualizations, aggregation functionalities, and future population + lockdown predictions. It also features several Python scripts for data cleaning, along with a dedicated folder that automates this process using bash commands.
 
-## Installation Instructions
-To set up and run the Prison Operations Snapshot, follow these steps:
-Setting this up 'Dont know if we need this'
+## Hosting
+The Prison Operations Snapshot is a Streamlit application that is hosted on the Streamlit Community Cloud. Due to this setup, any changes made to the webserver.py file or related data in this repository will be directly reflected in the application. 
 
 ## Usage
 To start the Streamlit application and visualize the data:
@@ -14,7 +13,6 @@ To start the Streamlit application and visualize the data:
 streamlit run webserver.py
 ```
 
- 
 ## Features
 - **Data Storage**: Efficiently stores data regarding prison populations and lockdown statuses.
 - **Data Aggregation**: Allows complex aggregations on the stored data.
