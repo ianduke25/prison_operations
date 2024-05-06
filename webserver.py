@@ -395,7 +395,7 @@ fig.update_layout(
         style='streets'
     ),
     showlegend=False,
-    title='Interactive Map of Locations',
+    title='Map of Locations',
     hoverlabel=dict(
         bgcolor="black",  # Background color for hover
         font_color="white",  # Font color for hover text
