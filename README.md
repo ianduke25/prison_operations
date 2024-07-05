@@ -23,12 +23,12 @@ The first piece of functionality in our application is the ability to download t
 - **facilties**: List of all facilties and their specific latitiude and longitude values.
 - **requirements.txt**: Required libraries and dependencies
 - **webserver.py**: The actual application source code. This file hosts the front end display as well as the intented functionality for the various application features.
-- **lcokdown_prediction_modeling.ipynb**: Notebook for development of machine learning models to predict lockdowns.
+- **lockdown_prediction_modeling.ipynb**: Notebook for development of machine learning models to predict lockdowns.
 
 ## Contributors
-We are a team of data scientests at the University of San Francisco. 
+We are a team of data scientists at the University of San Francisco. 
 
 ## Application Access
-The application can be accessed through the landing page here: https://justice-data-collaborative.webflow.io/
+The application can be accessed through the landing page here: https://justicedata.org
 
 
