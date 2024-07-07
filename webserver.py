@@ -164,7 +164,8 @@ st.markdown("[Back to Justice Data Collaborative](https://justice-data-collabora
 st.title('Prison Operations Snapshot')
 
 # Define data input
-file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/data_update/master_dataframe_cleaned.csv'
+#file_path = 'https://raw.githubusercontent.com/lksanterre/prison/main/data_update/master_dataframe_cleaned.csv'
+file_path = 'https://raw.githubusercontent.com/ianduke25/prison_operations_private/main/data_update/master_dataframe_cleaned.csv'
 total_content = requests.get(file_path).content
 dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 
