@@ -2,3 +2,4 @@ streamlit
 pandas
 plotly
 prophet
+numpy<2.0.0
