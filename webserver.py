@@ -172,12 +172,12 @@ dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 ###STEP THREE: START BUILDING STREAMLIT APP##
 ###BEGIN BY DEFINING BUTTONS###
 
-# Create Button 1: Complete JDC Dataset Download
+# Create Button 1: Complete Equalysis Dataset Download
 response = requests.get(file_path)
 if response.ok:
     csv_content = response.content
     btn = st.download_button(
-        label="Download Complete JDC DataSet",
+        label="Download Complete Equalysis DataSet",
         data=csv_content,
         file_name="total_df.csv",
         mime="text/csv"
