@@ -176,26 +176,11 @@ dataframe = pd.read_csv(StringIO(total_content.decode('utf-8')))
 # Create Button 1: Complete Equalysis Dataset Download
 response = requests.get(file_path)
 if response.ok:
-    # Read the CSV content into a DataFrame
     csv_content = response.content
-    df = pd.read_csv(io.BytesIO(csv_content))
-    
-    # Filter the DataFrame to include only the desired columns
-    columns_to_include = [
-        'title', 'population', 'operation_level', 'gender',
-        'judicial_district', 'county', 'bop_region', 'full_address',
-        'visiting_status', 'datetime_of_data'
-    ]
-    filtered_df = df[columns_to_include]
-    
-    # Convert the filtered DataFrame back to CSV
-    filtered_csv_content = filtered_df.to_csv(index=False).encode('utf-8')
-    
-    # Create the download button
     btn = st.download_button(
         label="Download Complete Equalysis DataSet",
-        data=filtered_csv_content,
-        file_name="filtered_total_df.csv",
+        data=csv_content,
+        file_name="total_df.csv",
         mime="text/csv"
     )
 else:
