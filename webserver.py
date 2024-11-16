@@ -1,6 +1,7 @@
 # Import packages
 from prophet.plot import plot_plotly, plot_components_plotly
 import os
+import io
 import re
 import requests
 import pandas as pd
