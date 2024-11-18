@@ -129,7 +129,7 @@ if __name__ == "__main__":
     columns_to_include = ['title', 'population', 'operation_level', 'gender', 'judicial_district', 'county', 'bop_region', 'full_address', 'visiting_status', 'datetime_of_data']
     new_data = new_data[columns_to_include]
 
-    history = pd.read_csv('master_dataframe_cleaned.csv') #might need to change location
+    history = pd.read_csv('master_dataframe_cleaned.csv')
 
     result_df = pd.concat([new_data, history])
     result_df.to_csv('master_dataframe_cleaned.csv', index=False)
