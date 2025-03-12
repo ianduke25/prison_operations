@@ -29,6 +29,6 @@ The first piece of functionality in our application is the ability to download t
 We are a team of data scientists at the University of San Francisco. 
 
 ## Application Access
-The application can be accessed through the landing page here: https://justicedata.org
+The application can be accessed through the landing page here: https://equalysis.org
 
 
